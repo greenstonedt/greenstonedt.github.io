@@ -1,0 +1,87 @@
+{
+    "paths": {},
+    "uuids": [
+        "02delMVqdBD70a/HSD99FK",
+        "14fm62gOlBR7l2pM675ZC0",
+        "29FYIk+N1GYaeWH/q1NxQO",
+        "49D1CI2IRHwKGPJIAIWLdz",
+        "6dVXcQS99JELLkpccRVUwD",
+        "71VhFCTINJM6/Ky3oX9nBT",
+        "a2MjXRFdtLlYQ5ouAFv/+R",
+        "a4ZAd3Va5PPpPHCX24JkVv",
+        "b4P/PCArtIdIH38t6mlw8Y",
+        "ddExqClz9FpY+mSbYAUE7Q",
+        "e8Ueib+qJEhL6mXAHdnwbi",
+        "e97GVMl6JHh5Ml5qEDdSGa",
+        "ecpdLyjvZBwrvm+cedCcQy",
+        "f0BIwQ8D5Ml7nTNQbh1YlS"
+    ],
+    "scenes": {
+        "db://assets/scenes/levelSelection.fire": "a4ZAd3Va5PPpPHCX24JkVv",
+        "db://assets/scenes/ingame.fire": "14fm62gOlBR7l2pM675ZC0",
+        "db://assets/scenes/landing.fire": "49D1CI2IRHwKGPJIAIWLdz"
+    },
+    "redirect": [
+        "02delMVqdBD70a/HSD99FK",
+        0,
+        "ecpdLyjvZBwrvm+cedCcQy",
+        0
+    ],
+    "deps": [
+        "internal"
+    ],
+    "packs": {
+        "027e56438": [
+            "14fm62gOlBR7l2pM675ZC0",
+            "29FYIk+N1GYaeWH/q1NxQO",
+            "a2MjXRFdtLlYQ5ouAFv/+R",
+            "ddExqClz9FpY+mSbYAUE7Q",
+            "e97GVMl6JHh5Ml5qEDdSGa",
+            "f0BIwQ8D5Ml7nTNQbh1YlS"
+        ],
+        "09b7df110": [
+            "71VhFCTINJM6/Ky3oX9nBT",
+            "b4P/PCArtIdIH38t6mlw8Y",
+            "e8Ueib+qJEhL6mXAHdnwbi"
+        ],
+        "0ae6b3e7e": [
+            "29FYIk+N1GYaeWH/q1NxQO",
+            "49D1CI2IRHwKGPJIAIWLdz",
+            "e97GVMl6JHh5Ml5qEDdSGa",
+            "f0BIwQ8D5Ml7nTNQbh1YlS"
+        ],
+        "0ef6d040e": [
+            "29FYIk+N1GYaeWH/q1NxQO",
+            "6dVXcQS99JELLkpccRVUwD",
+            "a4ZAd3Va5PPpPHCX24JkVv",
+            "e97GVMl6JHh5Ml5qEDdSGa",
+            "f0BIwQ8D5Ml7nTNQbh1YlS"
+        ]
+    },
+    "name": "main",
+    "importBase": "import",
+    "nativeBase": "native",
+    "debug": true,
+    "isZip": false,
+    "encrypted": false,
+    "versions": {
+        "import": [
+            "027e56438",
+            "efb88",
+            "09b7df110",
+            "01145",
+            "0ae6b3e7e",
+            "a6118",
+            "0ef6d040e",
+            "41d00"
+        ],
+        "native": [
+            "71VhFCTINJM6/Ky3oX9nBT",
+            "c06a9",
+            "b4P/PCArtIdIH38t6mlw8Y",
+            "83fcc",
+            "e8Ueib+qJEhL6mXAHdnwbi",
+            "90cf4"
+        ]
+    }
+}
