@@ -1,0 +1,1 @@
+{"paths":{"0":["icon",0],"1":["icon",1,1]},"types":["cc.Texture2D","cc.SpriteFrame"],"uuids":["60L9IMYVVH+aQrJq6G2hmE","b3NclsHplJvaW+72fQZ5l5"],"scenes":{},"redirect":[],"deps":[],"packs":{},"name":"resources","importBase":"import","nativeBase":"native","debug":false,"isZip":false,"encrypted":false,"versions":{"import":[0,"7871f",1,"dde62"],"native":[0,"cc44b"]}}
