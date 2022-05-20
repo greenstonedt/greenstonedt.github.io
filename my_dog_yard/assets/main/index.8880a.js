@@ -356,16 +356,424 @@ window.__require = function e(t, n, r) {
       };
     }
   }, {} ],
+  BagBoosterItem: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "522aaV68pdPjKN16YogApeQ", "BagBoosterItem");
+    "use strict";
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        airplane: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        fairystick: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hammer: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paintbrush: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rocket: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        wheel: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      onLoad: function onLoad() {
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        this.quantityLabel = this.node.getChildByName("quantity").getComponent(cc.Label);
+        this.button = this.node.getChildByName("button");
+        this.button.on("click", this.onClicked, this);
+      },
+      loadData: function loadData(data, onItemClicked) {
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        this.quantityLabel = this.node.getChildByName("quantity").getComponent(cc.Label);
+        this.button = this.node.getChildByName("button");
+        this.data = data;
+        this.onItemClicked = onItemClicked;
+        this.icon.spriteFrame = this[data.id];
+        this.quantityLabel.string = "x" + (data.amount || 0);
+      },
+      updateNumber: function updateNumber(number) {
+        this.quantityLabel.string = "x" + (0 | number);
+      },
+      onClicked: function onClicked() {
+        this.onItemClicked && this.onItemClicked(this.data.id);
+      }
+    });
+    cc._RF.pop();
+  }, {} ],
   BagSubscene: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "813cbcI64NCwrG5dM76T4yo", "BagSubscene");
     "use strict";
+    var _yard = _interopRequireDefault(require("../../staticData/yard"));
+    var _userState = _interopRequireDefault(require("../../userState"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
+    function _extends() {
+      _extends = Object.assign || function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
+        }
+        return target;
+      };
+      return _extends.apply(this, arguments);
+    }
+    var ITEM_WIDTH = 480;
+    var BOOSTER_ITEM_HEIGHT = 640;
+    var SUPPLY_ITEM_HEIGHT = 500;
+    var BOTTOM_SPACE = 162;
+    var LIST_SPACING = 50;
+    var HIGHLIGHT_SPEED = .7;
     cc.Class({
       extends: cc.Component,
-      properties: {},
+      properties: {
+        BoosterItem: {
+          default: null,
+          type: cc.Prefab
+        },
+        SupplyItem: {
+          default: null,
+          type: cc.Prefab
+        },
+        material_highlight: {
+          default: null,
+          type: cc.Material
+        }
+      },
+      onLoad: function onLoad() {
+        this.app = cc.find("app").getComponent("app");
+        this.subsceneController = cc.find("Canvas").getComponent("SubsceneController");
+        this.wallpaper = this.node.getChildByName("wallpaper");
+        this.topFrame = this.node.getChildByName("topFrame");
+        this.topBar = this.topFrame.getChildByName("top");
+        this.topBg = this.topFrame.getChildByName("bg");
+        this.boostersTab = this.topFrame.getChildByName("boostersTab");
+        this.suppliesTab = this.topFrame.getChildByName("suppliesTab");
+        this.bottomFrame = this.node.getChildByName("bottomFrame");
+        this.bottomFramePlace = this.bottomFrame.getChildByName("frame");
+        this.bottomFrameEmpty = this.bottomFrame.getChildByName("placeNotification");
+        this.placeButton = this.bottomFramePlace.getChildByName("placeButton").getComponent(cc.Button);
+        this.bottomFramePlace.active = false;
+        this.bottomFrameEmpty.active = true;
+        this.placeButton.node.on("click", this.onPlaceButtonClicked, this);
+        this.boostersScrollView = this.node.getChildByName("boostersScrollview");
+        this.boostersScrollFrame = this.boostersScrollView.getChildByName("view").getChildByName("content");
+        this.suppliesScrollView = this.node.getChildByName("suppliesScrollview");
+        this.suppliesScrollFrame = this.suppliesScrollView.getChildByName("view").getChildByName("content");
+        this.topBg.zIndex = -2;
+        this.boostersTab.on("click", this.onBoostersTabClicked, this);
+        this.suppliesTab.on("click", this.onSuppliesTabClicked, this);
+        this.selectTab("boosters");
+        this.app.boostersRefreshRequest = true;
+        this.app.suppliesRefreshRequest = true;
+        this.boosterItems = {};
+        this.supplyItems = {};
+        this.selectingSuppliesCount = 0;
+        this.highlightTimer = 0;
+      },
+      onEnable: function onEnable() {
+        if (this.app.boostersRefreshRequest) {
+          this.loadBoosterItems();
+          this.app.boostersRefreshRequest = false;
+        }
+        if (this.app.suppliesRefreshRequest) {
+          this.loadSupplyItems();
+          this.app.suppliesRefreshRequest = false;
+        }
+        this.clearHighlightSupplies();
+      },
+      onOpened: function onOpened(opts) {
+        opts && opts.tab && this.selectTab(opts.tab);
+      },
+      update: function update(dt) {
+        if (this.selectingSuppliesCount) {
+          this.highlightTimer += dt * HIGHLIGHT_SPEED;
+          this.material_highlight.setProperty("hl_timer", this.highlightTimer);
+        }
+      },
+      loadBoosterItems: function loadBoosterItems() {
+        for (var key in this.boosterItems) {
+          var boosterItem = this.boosterItems[key];
+          boosterItem.node.destroy();
+        }
+        this.boosterItems = {};
+        var boostersData = _userState["default"].getBoosters();
+        var boosterCounter = 0;
+        for (var _key in boostersData) {
+          var item = boostersData[_key];
+          if (item.amount) {
+            var goItem = cc.instantiate(this.BoosterItem).getComponent("BagBoosterItem");
+            goItem.node.setParent(this.boostersScrollFrame);
+            goItem.node.x = boosterCounter % 2 ? .5 * ITEM_WIDTH : .5 * -ITEM_WIDTH;
+            goItem.node.y = -LIST_SPACING - Math.floor(.5 * boosterCounter) * BOOSTER_ITEM_HEIGHT;
+            goItem.loadData(_extends({
+              id: _key
+            }, item), this.onBoosterItemClicked.bind(this));
+            this.boosterItems[_key] = goItem;
+            boosterCounter++;
+          }
+        }
+        this.boostersScrollFrame.height = BOOSTER_ITEM_HEIGHT * Math.ceil(.5 * boosterCounter) + 2 * LIST_SPACING;
+      },
+      loadSupplyItems: function loadSupplyItems() {
+        var _this = this;
+        for (var key in this.supplyItems) {
+          var supplyItem = this.supplyItems[key];
+          supplyItem.node.destroy();
+        }
+        this.supplyItems = {};
+        var suppliesData = _userState["default"].getSupplies();
+        var yardData = _userState["default"].getYard();
+        var supplyCounter = 0;
+        suppliesData.forEach(function(item) {
+          var goItem = cc.instantiate(_this.SupplyItem).getComponent("BagSupplyItem");
+          goItem.node.setParent(_this.suppliesScrollFrame);
+          goItem.node.x = supplyCounter % 2 ? .5 * ITEM_WIDTH : .5 * -ITEM_WIDTH;
+          goItem.node.y = -LIST_SPACING - Math.floor(.5 * supplyCounter) * SUPPLY_ITEM_HEIGHT;
+          goItem.loadData({
+            id: item,
+            isPlaced: !!yardData[item]
+          }, _this.onSupplyItemClicked.bind(_this));
+          goItem.materialHighlight = _this.material_highlight;
+          _this.supplyItems[item] = goItem;
+          supplyCounter++;
+        });
+        this.suppliesScrollFrame.height = SUPPLY_ITEM_HEIGHT * Math.ceil(.5 * supplyCounter) + 2 * LIST_SPACING + this.bottomFrame.height * this.bottomFrame.scale;
+      },
+      selectTab: function selectTab(tab) {
+        if (this.selectingTab === tab) return;
+        this.selectingTab = tab;
+        if ("boosters" === tab) {
+          this.boostersTab.getChildByName("selected").active = true;
+          this.boostersTab.getChildByName("unselected").active = false;
+          this.suppliesTab.getChildByName("selected").active = false;
+          this.suppliesTab.getChildByName("unselected").active = true;
+          this.boostersTab.zIndex = 1;
+          this.suppliesTab.zIndex = -1;
+          this.boostersScrollView.active = true;
+          this.suppliesScrollView.active = false;
+          this.bottomFrame.active = false;
+        } else if ("supplies" === tab) {
+          this.boostersTab.getChildByName("selected").active = false;
+          this.boostersTab.getChildByName("unselected").active = true;
+          this.suppliesTab.getChildByName("selected").active = true;
+          this.suppliesTab.getChildByName("unselected").active = false;
+          this.boostersTab.zIndex = -1;
+          this.suppliesTab.zIndex = 1;
+          this.boostersScrollView.active = false;
+          this.suppliesScrollView.active = true;
+          this.bottomFrame.active = true;
+          this.clearHighlightSupplies();
+        }
+      },
+      clearHighlightSupplies: function clearHighlightSupplies() {
+        this.bottomFramePlace.active = false;
+        this.bottomFrameEmpty.active = true;
+        this.selectingSuppliesCount = 0;
+        this.highlightTimer = 0;
+        for (var key in this.supplyItems) {
+          var supplyItem = this.supplyItems[key];
+          supplyItem.unHighlight;
+        }
+      },
+      onBoostersTabClicked: function onBoostersTabClicked() {
+        this.selectTab("boosters");
+      },
+      onSuppliesTabClicked: function onSuppliesTabClicked() {
+        this.selectTab("supplies");
+      },
+      onBoosterItemClicked: function onBoosterItemClicked(id) {
+        this.subsceneController.switchScene("shop", {
+          id: id
+        });
+      },
+      onSupplyItemClicked: function onSupplyItemClicked(id) {
+        if (this.supplyItems[id].isHighlight) {
+          this.supplyItems[id].unHighlight();
+          this.selectingSuppliesCount--;
+        } else {
+          this.supplyItems[id].highlight();
+          this.selectingSuppliesCount++;
+          this.highlightTimer = 0;
+        }
+        this.bottomFramePlace.active = this.selectingSuppliesCount > 0;
+        this.bottomFrameEmpty.active = 0 === this.selectingSuppliesCount;
+      },
+      onPlaceButtonClicked: function onPlaceButtonClicked() {
+        var yardData = _userState["default"].getYard();
+        for (var key in this.supplyItems) {
+          var supplyItem = this.supplyItems[key];
+          if (supplyItem.isHighlight) {
+            yardData[key] || (yardData[key] = {
+              x: -1,
+              y: -1
+            });
+            supplyItem.setPlaced();
+          }
+        }
+        _userState["default"].saveYard(yardData);
+        this.app.yardViewRefreshRequest = true;
+        this.clearHighlightSupplies();
+      },
       updateScreenSize: function updateScreenSize(frame, uiScale) {
-        var wallpaper = this.node.getChildByName("wallpaper");
-        wallpaper.height = this.node.height;
+        this.wallpaper.height = this.node.height;
+        this.topFrame.y = .5 * this.node.height;
+        this.topFrame.scale = uiScale;
+        this.topBar.width = this.node.width / uiScale;
+        this.topBg.scale = this.node.scale / uiScale;
+        var bottomSpace = BOTTOM_SPACE * uiScale;
+        this.bottomFrame.scale = uiScale;
+        this.bottomFrame.y = .5 * -this.node.height + bottomSpace + .5 * this.bottomFrame.height * uiScale;
+        var topSpace = this.topFrame.height * uiScale;
+        this.boostersScrollView.height = this.node.height - bottomSpace - topSpace;
+        this.boostersScrollView.y = .5 * (bottomSpace - topSpace);
+        this.suppliesScrollView.height = this.node.height - bottomSpace - topSpace;
+        this.suppliesScrollView.y = .5 * (bottomSpace - topSpace);
+      }
+    });
+    cc._RF.pop();
+  }, {
+    "../../staticData/yard": "yard",
+    "../../userState": "userState"
+  } ],
+  BagSupplyItem: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "73969qcc6xIXYVDwfzZPHIG", "BagSupplyItem");
+    "use strict";
+    var MAX_ICON_SIZE = 380;
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        bed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionBlue: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionOrange: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionPink: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        featherToy: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        plushDoll: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        pot: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRainbow: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        stretchingBoard: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swimRing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tent: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tower: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tunnel: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      onLoad: function onLoad() {
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        this.placedIcon = this.node.getChildByName("placed-icon");
+        this.materialNormal = this.icon.getMaterial(0);
+        this.node.on("click", this.onClicked, this);
+      },
+      loadData: function loadData(data, onItemClicked) {
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        this.placedIcon = this.node.getChildByName("placed-icon");
+        var maxSize = Math.max(this.icon.node.width, this.icon.node.height, MAX_ICON_SIZE);
+        this.icon.node.scale = MAX_ICON_SIZE / maxSize;
+        this.data = data;
+        this.onItemClicked = onItemClicked;
+        this.icon.spriteFrame = this[data.id];
+        this.icon.node.active = !data.isPlaced;
+        this.placedIcon.active = data.isPlaced;
+      },
+      setPlaced: function setPlaced() {
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        this.placedIcon = this.node.getChildByName("placed-icon");
+        this.icon.node.active = false;
+        this.placedIcon.active = true;
+      },
+      highlight: function highlight() {
+        this.isHighlight = true;
+        this.highlightTimer = 0;
+        this.icon.setMaterial(0, this.materialHighlight);
+      },
+      unHighlight: function unHighlight() {
+        this.isHighlight = false;
+        this.icon.setMaterial(0, this.materialNormal);
+      },
+      onClicked: function onClicked() {
+        this.onItemClicked && this.onItemClicked(this.data.id);
       }
     });
     cc._RF.pop();
@@ -530,7 +938,6 @@ window.__require = function e(t, n, r) {
         this.animating = false;
       },
       setSelected: function setSelected(selected, animate) {
-        var _this = this;
         void 0 === animate && (animate = false);
         this.selectedBacker = this.node.getChildByName("choosebg");
         this.selectedIconBacker = this.node.getChildByName("choose-iconBg");
@@ -559,7 +966,7 @@ window.__require = function e(t, n, r) {
               y: 52
             }, {
               easing: "quadOut"
-            }).start();
+            }).call(this.normalIconBacker.active = false).start();
             cc.tween(this.label).to(ANIMATION_DURATION, {
               opacity: 255,
               y: -56
@@ -571,20 +978,20 @@ window.__require = function e(t, n, r) {
               y: 56
             }, {
               easing: "quadOut"
-            }).start();
+            }).call(this.animating = false).start();
           } else {
             this.normalIconBacker.active = true;
             cc.tween(this.selectedBacker).to(ANIMATION_DURATION, {
               opacity: 0
             }, {
               easing: "quadOut"
-            }).start();
+            }).call(this.selectedBacker.active = false).start();
             cc.tween(this.selectedIconBacker).to(ANIMATION_DURATION, {
               opacity: 0,
               y: 0
             }, {
               easing: "quadOut"
-            }).start();
+            }).call(this.selectedIconBacker.active = false).start();
             cc.tween(this.normalIconBacker).to(ANIMATION_DURATION, {
               opacity: 255,
               y: 0
@@ -596,21 +1003,14 @@ window.__require = function e(t, n, r) {
               y: -106
             }, {
               easing: "quadOut"
-            }).start();
+            }).call(this.label.active = false).start();
             cc.tween(this.icon).to(ANIMATION_DURATION, {
               scale: .9,
               y: -4
             }, {
               easing: "quadOut"
-            }).start();
+            }).call(this.animating = false).start();
           }
-          setTimeout(function() {
-            _this.selectedBacker.active = selected;
-            _this.selectedIconBacker.active = selected;
-            _this.normalIconBacker.active = !selected;
-            _this.label.active = selected;
-            _this.animating = false;
-          }, 1e3 * ANIMATION_DURATION);
         } else {
           this.selectedBacker.active = selected;
           this.selectedIconBacker.active = selected;
@@ -634,6 +1034,7 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "5d81bVhjMFBDJtD02dDq0ze", "BottomUI");
     "use strict";
+    var ANIMATION_DURATION = .3;
     cc.Class({
       extends: cc.Component,
       properties: {},
@@ -681,6 +1082,39 @@ window.__require = function e(t, n, r) {
       },
       isButtonAnimating: function isButtonAnimating() {
         return this.homeButton.animating || this.shopButton.animating || this.catButton.animating || this.bagButton.animating || this.settingsButton.animating;
+      },
+      show: function show(animate) {
+        var _this = this;
+        void 0 === animate && (animate = false);
+        this.node.active = true;
+        if (animate) {
+          this.animating = true;
+          cc.tween(this.node).to(ANIMATION_DURATION, {
+            opacity: 255
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this.animating = false;
+          }).start();
+        } else this.node.opacity = 255;
+      },
+      hide: function hide(animate) {
+        var _this2 = this;
+        void 0 === animate && (animate = false);
+        if (animate) {
+          this.animating = true;
+          cc.tween(this.node).to(ANIMATION_DURATION, {
+            opacity: 0
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this2.node.active = false;
+            _this2.animating = false;
+          }).start();
+        } else {
+          this.node.active = false;
+          this.node.opacity = 0;
+        }
       },
       updateScreenSize: function updateScreenSize(frame, uiScale) {
         this.node.scale = uiScale;
@@ -3684,44 +4118,159 @@ window.__require = function e(t, n, r) {
         default: obj
       };
     }
-    var FRONT_CAT_SCALE = 1.6;
-    var BACK_CAT_SCALE = 1.2;
     var PROGRESS_FRAME_OFFSET = 26;
     var START_BUTTON_OFFSET = 320;
-    var TOP_HEIGHT = 80;
-    var BOTTOM_HEIGHT = 160;
+    var ANIMATION_DURATION = .4;
     cc.Class({
       extends: cc.Component,
       properties: {},
       onLoad: function onLoad() {
         this.app = cc.find("app").getComponent("app");
+        this.subsceneController = cc.find("Canvas").getComponent("SubsceneController");
         this.progressFrame = this.node.getChildByName("ProgressFrame").getComponent("ProgressFrame");
         this.yardView = this.node.getChildByName("YardView").getComponent("YardView");
+        this.startButton = this.node.getChildByName("startButton").getComponent(cc.Button);
+        this.levelLabel = this.startButton.node.getChildByName("Background").getChildByName("Label").getComponent(cc.Label);
+        this.editModeFrame = this.node.getChildByName("EditMode");
+        this.editBottomframe = this.editModeFrame.getChildByName("bottomFrame");
+        this.editBottomframeNormal = this.editBottomframe.getChildByName("frame");
+        this.editBottomframeDrag = this.editBottomframe.getChildByName("dragNotification");
+        this.saveButton = this.editBottomframeNormal.getChildByName("saveButton").getComponent(cc.Button);
+        this.bagButton = this.editBottomframeNormal.getChildByName("bagButton").getComponent(cc.Button);
+        this.homeButton = this.editModeFrame.getChildByName("homeButton").getComponent(cc.Button);
+        this.editBottomframeDrag.active = false;
+        this.startButton.node.on("click", this.loadGame, this);
+        this.saveButton.node.on("click", this.saveClicked, this);
+        this.homeButton.node.on("click", this.homeClicked, this);
+        this.bagButton.node.on("click", this.bagClicked, this);
+        this.app.yardViewRefreshRequest = true;
+      },
+      onEnable: function onEnable() {
+        if (this.app.yardViewRefreshRequest) {
+          this.yardView.loadItems();
+          this.app.yardViewRefreshRequest = false;
+        }
       },
       start: function start() {
-        var startButton = this.node.getChildByName("startButton");
-        this.levelLabel = startButton.getChildByName("Background").getChildByName("Label").getComponent(cc.Label);
         this.updateUI();
+        this.exitEditMode();
       },
       updateUI: function updateUI() {
         var currentLevel = _userState["default"].getProgression();
         this.levelLabel.string = "LEVEL " + _levelModel["default"].getLevel(currentLevel).id;
       },
       updateScreenSize: function updateScreenSize(frame, uiScale) {
-        var centerScale = 1;
         this.yardView.updateScreenSize(frame, uiScale);
-        this.yardView.node.scale = (this.node.height - (BOTTOM_HEIGHT + TOP_HEIGHT) * uiScale) / this.yardView.node.height;
-        this.yardView.node.y = (BOTTOM_HEIGHT - TOP_HEIGHT) * uiScale * .5;
-        this.progressFrame.node.y = .5 * this.node.height - PROGRESS_FRAME_OFFSET * uiScale;
+        this.yardView.node.scale = this.node.height / this.yardView.node.height;
+        this.progressFrame.originY = .5 * this.node.height - PROGRESS_FRAME_OFFSET * uiScale;
+        this.progressFrame.node.y = this.progressFrame.originY;
         this.progressFrame.node.scale = uiScale;
         this.progressFrame.updateScreenSize(frame, uiScale);
-        var startButton = this.node.getChildByName("startButton");
-        startButton.y = .5 * -this.node.height + START_BUTTON_OFFSET * uiScale;
-        startButton.scale = uiScale;
+        this.startButton.originY = .5 * -this.node.height + START_BUTTON_OFFSET * uiScale;
+        this.startButton.node.y = this.startButton.originY;
+        this.startButton.node.scale = uiScale;
+        this.editModeFrame.width = this.node.width;
+        this.editModeFrame.height = this.node.height;
+        this.editBottomframe.scale = uiScale;
       },
       loadGame: function loadGame() {
         var homeNode = cc.find("Canvas").getComponent("Home");
         this.app.changeScene(homeNode, "Game");
+      },
+      saveClicked: function saveClicked() {
+        this.yardView.saveYardState();
+        this.exitEditMode(true);
+      },
+      homeClicked: function homeClicked() {
+        this.yardView.loadItems();
+        this.exitEditMode(true);
+      },
+      bagClicked: function bagClicked() {
+        this.yardView.saveYardState();
+        this.exitEditMode(false);
+        this.subsceneController.switchScene("bag", {
+          tab: "supplies"
+        }, true);
+      },
+      enterEditMode: function enterEditMode(animate) {
+        var _this = this;
+        void 0 === animate && (animate = false);
+        this.subsceneController.topUI.hide(animate);
+        this.subsceneController.bottomUI.hide(animate);
+        this.yardView.enterEditMode(animate);
+        if (animate) {
+          cc.tween(this.progressFrame.node).to(ANIMATION_DURATION, {
+            y: this.progressFrame.originY + this.progressFrame.node.height,
+            opacity: 0
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this.progressFrame.node.active = false;
+          }).start();
+          cc.tween(this.startButton.node).to(ANIMATION_DURATION, {
+            y: this.startButton.originY - this.startButton.node.height,
+            opacity: 0
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this.startButton.node.active = false;
+          }).start();
+          this.editModeFrame.active = true;
+          this.editModeFrame.opacity = 0;
+          cc.tween(this.editModeFrame).to(ANIMATION_DURATION, {
+            opacity: 255
+          }, {
+            easing: "quadOut"
+          }).start();
+        } else {
+          this.progressFrame.node.active = false;
+          this.startButton.node.active = false;
+          this.editModeFrame.active = true;
+          this.editModeFrame.opacity = 255;
+        }
+      },
+      exitEditMode: function exitEditMode(animate) {
+        var _this2 = this;
+        void 0 === animate && (animate = false);
+        this.subsceneController.topUI.show(animate);
+        this.subsceneController.bottomUI.show(animate);
+        this.yardView.exitEditMode(animate);
+        if (animate) {
+          this.progressFrame.node.active = true;
+          cc.tween(this.progressFrame.node).delay(.1).to(ANIMATION_DURATION, {
+            y: this.progressFrame.originY,
+            opacity: 255
+          }, {
+            easing: "quadOut"
+          }).start();
+          this.startButton.node.active = true;
+          cc.tween(this.startButton.node).delay(.1).to(ANIMATION_DURATION, {
+            y: this.startButton.originY,
+            opacity: 255
+          }, {
+            easing: "quadOut"
+          }).start();
+          cc.tween(this.editModeFrame).to(ANIMATION_DURATION, {
+            opacity: 0
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this2.editModeFrame.active = false;
+          }).start();
+        } else {
+          this.progressFrame.node.opacity = 255;
+          this.progressFrame.node.y = this.progressFrame.originY;
+          this.progressFrame.node.active = true;
+          this.startButton.node.opacity = 255;
+          this.startButton.node.y = this.startButton.originY;
+          this.startButton.node.active = true;
+          this.editModeFrame.active = false;
+        }
+      },
+      editModeDragNotification: function editModeDragNotification(enable) {
+        void 0 === enable && (enable = true);
+        this.editBottomframeDrag.active = enable;
+        this.editBottomframeNormal.active = !enable;
       }
     });
     cc._RF.pop();
@@ -3971,9 +4520,9 @@ window.__require = function e(t, n, r) {
       properties: {},
       onLoad: function onLoad() {
         var _this = this;
-        var subsceneController = cc.find("Canvas").getComponent("SubsceneController");
+        this.app = cc.find("app").getComponent("app");
+        this.subsceneController = cc.find("Canvas").getComponent("SubsceneController");
         this.home = cc.find("Canvas").getComponent("Home");
-        this.homeSubscene = subsceneController.subsceneMap["home"].object;
         this.popup = this.node.getChildByName("popup");
         var frame = this.popup.getChildByName("frame");
         var innerFrame = frame.getChildByName("innerFrame");
@@ -4018,11 +4567,14 @@ window.__require = function e(t, n, r) {
       },
       loadLevel: function loadLevel() {
         this.propertyLines["level"].number.string = _userState["default"].getProgression();
-        this.homeSubscene.updateUI();
+        var homeSubscene = this.subsceneController.subsceneMap["home"].object;
+        homeSubscene && homeSubscene.updateUI();
       },
       loadCoin: function loadCoin() {
         this.propertyLines["coin"].number.string = _userState["default"].getCoin();
         this.home.topUI.updateLabels();
+        var shopSubscene = this.subsceneController.subsceneMap["shop"].object;
+        shopSubscene && shopSubscene.updateCoin();
       },
       loadBoosterSelection: function loadBoosterSelection() {
         var _this2 = this;
@@ -4091,6 +4643,7 @@ window.__require = function e(t, n, r) {
           boosterData[subType].amount = Math.max(boosterData[subType].amount - 1, 0);
           _userState["default"].saveBoostersState();
           this.loadBoosterAmount();
+          this.app.boostersRefreshRequest = true;
         }
       },
       onRightPropertyClicked: function onRightPropertyClicked(event) {
@@ -4108,6 +4661,7 @@ window.__require = function e(t, n, r) {
           boosterData[subType].amount = Math.min(boosterData[subType].amount + 1, MAX_BOOSTER_AMOUNT);
           _userState["default"].saveBoostersState();
           this.loadBoosterAmount();
+          this.app.boostersRefreshRequest = true;
         }
       },
       onPropertyToggle: function onPropertyToggle(event) {
@@ -4120,11 +4674,16 @@ window.__require = function e(t, n, r) {
           boosterData[subType].selected = checkValue;
           _userState["default"].saveBoostersState();
           this.loadBoosterSelection();
+          this.app.boostersRefreshRequest = true;
         }
       },
       onResetClicked: function onResetClicked(event) {
         _userState["default"].clear();
         this.loadData();
+        var homeSubscene = this.subsceneController.subsceneMap["home"].object;
+        homeSubscene ? homeSubscene.yardView.loadItems() : this.app.yardViewRefreshRequest = true;
+        this.app.boostersRefreshRequest = true;
+        this.app.suppliesRefreshRequest = true;
       },
       updateScreenSize: function updateScreenSize(frame, uiScale) {
         this.popup = this.node.getChildByName("popup");
@@ -4778,6 +5337,7 @@ window.__require = function e(t, n, r) {
       },
       onBuyClicked: function onBuyClicked() {
         if (_ShopCommands["default"].buy(this.data.id, this.selectingNumber)) {
+          this.app.boostersRefreshRequest = true;
           this.parentScene.updateCoin();
           this.hide(true);
         } else this.showNotEnoughCoin();
@@ -4839,6 +5399,7 @@ window.__require = function e(t, n, r) {
         this.quantityLabel = this.node.getChildByName("quantity").getComponent(cc.Label);
         this.button = this.node.getChildByName("button");
         this.buttonLabel = this.button.getChildByName("Background").getChildByName("Label").getComponent(cc.Label);
+        this.button.on("click", this.onClicked, this);
       },
       loadData: function loadData(data, onItemClicked) {
         this.data = data;
@@ -4846,7 +5407,6 @@ window.__require = function e(t, n, r) {
         this.icon.spriteFrame = this[data.id];
         this.quantityLabel.string = "x" + (data.quantity || 0);
         this.buttonLabel.string = data.price;
-        this.button.on("click", this.onClicked, this);
       },
       updateNumber: function updateNumber(number) {
         this.quantityLabel.string = "x" + (0 | number);
@@ -4879,6 +5439,7 @@ window.__require = function e(t, n, r) {
       return _extends.apply(this, arguments);
     }
     var LIST_SPACING = 100;
+    var ITEM_HEIGHT = 500;
     cc.Class({
       extends: cc.Component,
       properties: {
@@ -4890,27 +5451,36 @@ window.__require = function e(t, n, r) {
       onLoad: function onLoad() {
         this.shopConfirmPopup = this.node.getChildByName("ShopConfirmPopup").getComponent("ShopConfirmPopup");
         this.shopConfirmPopup.parentScene = this;
-        var scrollView = this.node.getChildByName("scrollview").getComponent(cc.ScrollView);
-        var scrollFrame = scrollView.content;
+        this.scrollView = this.node.getChildByName("scrollview").getComponent(cc.ScrollView);
+        this.scrollFrame = this.scrollView.content;
         var topUI = this.node.getChildByName("topUI");
         var coinFrame = topUI.getChildByName("coinFrame");
         this.coinLabel = coinFrame.getChildByName("coinLabel").getComponent(cc.Label);
+        this.shopItems = {};
         var shopCounter = 0;
         for (var key in _shop["default"]) {
           var shopItem = cc.instantiate(this.ShopItem).getComponent("ShopItem");
-          shopItem.node.setParent(scrollFrame);
+          shopItem.node.setParent(this.scrollFrame);
           shopItem.node.x = shopCounter % 2 ? 200 : -200;
-          shopItem.node.y = -LIST_SPACING - 500 * Math.floor(.5 * shopCounter);
+          shopItem.node.y = -LIST_SPACING - Math.floor(.5 * shopCounter) * ITEM_HEIGHT;
           shopItem.loadData(_extends({
             id: key
           }, _shop["default"][key]), this.onItemClicked.bind(this));
+          this.shopItems[key] = shopItem;
           shopCounter++;
         }
-        scrollFrame.height = 500 * Math.ceil(.5 * shopCounter) + 2 * LIST_SPACING;
+        this.scrollFrame.height = ITEM_HEIGHT * Math.ceil(.5 * shopCounter) + 2 * LIST_SPACING;
       },
       onEnable: function onEnable() {
         this.shopConfirmPopup.hide();
         this.updateCoin();
+      },
+      onOpened: function onOpened(opts) {
+        if (opts && opts.id && this.shopItems[opts.id]) {
+          var itemY = -this.shopItems[opts.id].node.y + .5 * ITEM_HEIGHT;
+          var topCap = this.scrollFrame.height - .5 * this.scrollView.node.height;
+          this.scrollFrame.y = Math.min(Math.max(0, itemY), topCap);
+        }
       },
       updateCoin: function updateCoin() {
         this.coinLabel.string = _userState["default"].getCoin();
@@ -5039,29 +5609,34 @@ window.__require = function e(t, n, r) {
           home: {
             prefab: this.HomePrefab,
             component: "HomeSubscene",
-            object: null
+            object: null,
+            showTopUI: true
           },
           shop: {
             prefab: this.ShopPrefab,
             component: "ShopSubscene",
-            object: null
+            object: null,
+            showTopUI: false
           },
           cat: {
             prefab: this.CatPrefab,
             component: "CatSubscene",
-            object: null
+            object: null,
+            showTopUI: true
           },
           bag: {
             prefab: this.BagPrefab,
             component: "BagSubscene",
-            object: null
+            object: null,
+            showTopUI: false
           }
         };
         this.bottomUI.node.on("buttonClicked", this.onButtonUIClicked.bind(this));
         this.animating = false;
       },
-      switchScene: function switchScene(sceneId, animate) {
+      switchScene: function switchScene(sceneId, opts, animate) {
         var _this = this;
+        void 0 === opts && (opts = null);
         void 0 === animate && (animate = false);
         var targetSubscene = this.subsceneMap[sceneId];
         if (targetSubscene && targetSubscene.prefab && targetSubscene.component) {
@@ -5079,7 +5654,11 @@ window.__require = function e(t, n, r) {
                 _this.animating = false;
               }).start();
             } else object.node.active = false;
-            "shop" === this.currentId ? this.topUI.show(animate) : "shop" === sceneId && this.topUI.hide(animate);
+            "shop" === this.currentId || "bag" === this.currentId ? this.topUI.show(animate) : "shop" !== sceneId && "bag" !== sceneId || this.topUI.hide(animate);
+            if (this.subsceneMap[sceneId].showTopUI !== this.subsceneMap[this.currentId]) {
+              this.subsceneMap[sceneId].showTopUI && this.topUI.show(animate);
+              this.subsceneMap[sceneId].showTopUI || this.topUI.hide(animate);
+            }
           }
           if (!targetSubscene.object) {
             var _object = cc.instantiate(targetSubscene.prefab).getComponent(targetSubscene.component);
@@ -5089,6 +5668,7 @@ window.__require = function e(t, n, r) {
           targetSubscene.object.node.active = true;
           targetSubscene.object.node.zIndex = -1;
           targetSubscene.object.node.opacity = 255;
+          targetSubscene.object.onOpened && targetSubscene.object.onOpened(opts);
           this.currentId = sceneId;
           this.bottomUI.selectButton(sceneId, animate);
           this.updateScreenSize(this.app.FRAME, this.cachedUIScale);
@@ -5109,7 +5689,7 @@ window.__require = function e(t, n, r) {
           this.settingsPopup.show(true);
           return;
         }
-        this.switchScene(id, true);
+        this.switchScene(id, null, true);
       }
     });
     cc._RF.pop();
@@ -5187,58 +5767,509 @@ window.__require = function e(t, n, r) {
   }, {
     "../userState": "userState"
   } ],
+  YardItem: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "4d5b0vf9HpKDoge/BCGmito", "YardItem");
+    "use strict";
+    var HIGHLIGHT_SPEED = .7;
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        bed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionBlue: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionOrange: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionPink: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        featherToy: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        plushDoll: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        pot: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRainbow: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        stretchingBoard: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swimRing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tent: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tower: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tunnel: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        material_normal: {
+          default: null,
+          type: cc.Material
+        },
+        material_highlight: {
+          default: null,
+          type: cc.Material
+        }
+      },
+      onLoad: function onLoad() {
+        this.image = this.node.getChildByName("image").getComponent(cc.Sprite);
+        this.button = this.node.getChildByName("closeButton").getComponent(cc.Button);
+        this.image.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
+        this.button.node.on("click", this.onDeleteClicked, this);
+        this.x = -1;
+        this.y = -1;
+        this.isHighlight = true;
+        this.highlightTimer = 0;
+      },
+      setConfig: function setConfig(config) {
+        this.config = config;
+        this.config.size = this.config.size || {
+          x: 1,
+          y: 1
+        };
+        this.config.offset = this.config.offset || {
+          x: 0,
+          y: 0
+        };
+        this.config.buttonOffset = this.config.buttonOffset || {
+          x: 0,
+          y: 0
+        };
+        this.image = this.node.getChildByName("image").getComponent(cc.Sprite);
+        this.button = this.node.getChildByName("closeButton").getComponent(cc.Button);
+        this.image.spriteFrame = this[config.id];
+        this.button.node.x = .5 * this.image.node.width + this.config.buttonOffset.x;
+        this.button.node.y = .5 * this.image.node.height + this.config.buttonOffset.y;
+      },
+      hideDeleteButton: function hideDeleteButton() {
+        this.button = this.node.getChildByName("closeButton").getComponent(cc.Button);
+        this.button.node.active = false;
+      },
+      showDeleteButton: function showDeleteButton() {
+        this.button = this.node.getChildByName("closeButton").getComponent(cc.Button);
+        this.button.node.active = true;
+      },
+      highlight: function highlight() {
+        this.isHighlight = true;
+        this.highlightTimer = 0;
+        this.image.setMaterial(0, this.material_highlight);
+      },
+      unHighlight: function unHighlight() {
+        this.isHighlight = false;
+        this.image.setMaterial(0, this.material_normal);
+      },
+      update: function update(dt) {
+        if (this.isHighlight) {
+          this.highlightTimer += dt * HIGHLIGHT_SPEED;
+          this.material_highlight.setProperty("hl_timer", this.highlightTimer);
+        }
+      },
+      onTouchStart: function onTouchStart(e) {
+        var location = e.getLocation();
+        var offset = this.image.node.convertToNodeSpaceAR(location);
+        offset.x += .5 * this.image.node.width;
+        offset.y += .5 * this.image.node.height;
+        this.onItemTouched && this.onItemTouched(e, this, offset);
+        e.stopPropagation();
+      },
+      onDeleteClicked: function onDeleteClicked(e) {
+        this.onItemDeleted && this.onItemDeleted(this);
+      }
+    });
+    cc._RF.pop();
+  }, {} ],
   YardView: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "51fc0tBq/FAQZ6SB7dAaYfD", "YardView");
     "use strict";
     var _helpers = _interopRequireDefault(require("../helpers"));
+    var _yard = _interopRequireDefault(require("../staticData/yard"));
+    var _userState = _interopRequireDefault(require("../userState"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
       };
     }
+    function _extends() {
+      _extends = Object.assign || function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
+        }
+        return target;
+      };
+      return _extends.apply(this, arguments);
+    }
+    var PRESS_DURATION = .5;
+    var PRESS_MOVE_SQR_TOLERANCE = 10;
     var SCROLL_SPEED = 8;
     var SCROLL_DISTANCE_MODIFIER = 2.2;
+    var SCROLL_THRESHOLD_WITH_ITEM = 160;
+    var SCROLL_SPPED_WITH_ITEM = .3;
+    var INITIAL_X = -690;
+    var ANIMATION_DURATION = .4;
+    var WIREFRAME_CELL_SIZE = 200;
+    var WIREFRAME_Y_OFFSET = 800;
     cc.Class({
       extends: cc.Component,
-      properties: {},
+      properties: {
+        WireframeCell: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        YardItem: {
+          default: null,
+          type: cc.Prefab
+        }
+      },
       onLoad: function onLoad() {
+        this.app = cc.find("app").getComponent("app");
+        this.home = this.node.parent.getComponent("HomeSubscene");
         this.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
         this.node.on(cc.Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
         this.node.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd, this);
         this.node.on(cc.Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
         this._destX = this.node.x;
         this._prevTouchX = 0;
+        this._screenX = 0;
+        this._viewPos = {};
+        this.pressingTime = 0;
+        this.isPressing = false;
+        this.editMode = false;
+        this.selectingItem = null;
+        this.isDragging = false;
+        this.draggingOffset = null;
         this.scrollView = this.node.getChildByName("scrollView");
+        this.wireframe = this.scrollView.getChildByName("wireframe");
+        this.wireframe.x = .5 * -this.scrollView.width;
+        this.wireframe.y = .5 * this.scrollView.height - WIREFRAME_Y_OFFSET;
+        this.loadWireframe();
+        this.wireframe.active = false;
+        this.scrollView.x = INITIAL_X;
+        this._destX = INITIAL_X;
+      },
+      onEnable: function onEnable() {
+        if (this.app.yardViewRefreshRequest) {
+          this.loadItems();
+          this.app.yardViewRefreshRequest = false;
+        }
       },
       update: function update(dt) {
+        if (this.isDragging) {
+          var screenWidth = this.app.FRAME.width;
+          var screenX = this._screenX - .5 * (1024 - screenWidth);
+          var scrollThreshold = SCROLL_THRESHOLD_WITH_ITEM / 1024 * screenWidth;
+          screenX < scrollThreshold ? this._destX += (scrollThreshold - screenX) * SCROLL_SPPED_WITH_ITEM : screenX > screenWidth - scrollThreshold && (this._destX -= (scrollThreshold - (screenWidth - screenX)) * SCROLL_SPPED_WITH_ITEM);
+        }
         this.scrollView.x = _helpers["default"].lerp(this.scrollView.x, this._destX, dt * SCROLL_SPEED);
         var widthLimit = .5 * (this.scrollView.width - this.node.width / this.node.scale);
         var clampX = Math.max(Math.min(this.scrollView.x, widthLimit), -widthLimit);
         this._destX = clampX !== this.scrollView.x ? this.scrollView.x : this._destX;
         this.scrollView.x = clampX;
+        this.isPressing && (this.pressingTime += dt);
+        if (this.isPressing && this.pressingTime > PRESS_DURATION) {
+          this.isPressing = false;
+          this.editMode || this.home.enterEditMode(true);
+        }
+        if (this.editMode && this.isDragging && this.selectingItem) {
+          var touchCoord = this.convertToWireframeCoord(this._viewPos, this.draggingOffset);
+          this.isCoordValid(touchCoord, this.selectingItem.config, this.selectingItem) && this.placeItem(this.selectingItem, touchCoord);
+        }
       },
-      onTouchStart: function onTouchStart(e) {
+      loadWireframe: function loadWireframe() {
+        this.wireFrameCells = [];
+        var pattern = _yard["default"].pattern;
+        for (var y = 0; y < pattern.length; y++) {
+          this.wireFrameCells[y] = [];
+          for (var x = 0; x < pattern[y].length; x++) {
+            var newCell = new cc.Node();
+            newCell.addComponent(cc.Sprite);
+            newCell.getComponent(cc.Sprite).spriteFrame = this.WireframeCell;
+            newCell.x = x * WIREFRAME_CELL_SIZE + .5 * WIREFRAME_CELL_SIZE;
+            newCell.y = -y * WIREFRAME_CELL_SIZE - .5 * WIREFRAME_CELL_SIZE;
+            newCell.width = WIREFRAME_CELL_SIZE;
+            newCell.height = WIREFRAME_CELL_SIZE;
+            newCell.color = _yard["default"].colors[pattern[y][x]].color;
+            newCell.opacity = _yard["default"].colors[pattern[y][x]].opacity;
+            this.wireframe.addChild(newCell);
+            this.wireFrameCells[y][x] = {
+              tile: newCell,
+              type: pattern[y][x],
+              occupiedBy: null
+            };
+          }
+        }
+      },
+      loadItems: function loadItems() {
+        this.data = _extends({}, _userState["default"].getYard());
+        var pattern = _yard["default"].pattern;
+        for (var y = 0; y < pattern.length; y++) for (var x = 0; x < pattern[y].length; x++) this.wireFrameCells[y][x].occupiedBy = null;
+        if (this.yardItems) for (var key in this.yardItems) {
+          var yardItem = this.yardItems[key];
+          yardItem.node.destroy();
+        }
+        this.yardItems = {};
+        for (var _key in this.data) {
+          var item = this.data[_key];
+          var itemConfig = _yard["default"].items[_key];
+          if (!itemConfig || !this.isCoordValid(item, itemConfig)) continue;
+          var newYardItem = cc.instantiate(this.YardItem).getComponent("YardItem");
+          newYardItem.setConfig(_extends({
+            id: _key
+          }, itemConfig));
+          newYardItem.hideDeleteButton();
+          newYardItem.onItemTouched = this.onItemTouched.bind(this);
+          newYardItem.onItemDeleted = this.onItemDeleted.bind(this);
+          this.scrollView.addChild(newYardItem.node);
+          this.yardItems[_key] = newYardItem;
+          this.placeItem(newYardItem, item);
+        }
+        var willSave = false;
+        for (var _key2 in this.data) {
+          var _item = this.data[_key2];
+          if (-1 === _item.x && -1 === _item.y) {
+            willSave = true;
+            var coord = this.findValidRandomCoord(_key2);
+            if (!coord) {
+              delete this.data[_key2];
+              this.app.suppliesRefreshRequest = true;
+              continue;
+            }
+            this.data[_key2] = coord;
+            var _itemConfig = _yard["default"].items[_key2];
+            var _newYardItem = cc.instantiate(this.YardItem).getComponent("YardItem");
+            _newYardItem.setConfig(_extends({
+              id: _key2
+            }, _itemConfig));
+            _newYardItem.hideDeleteButton();
+            _newYardItem.onItemTouched = this.onItemTouched.bind(this);
+            _newYardItem.onItemDeleted = this.onItemDeleted.bind(this);
+            this.scrollView.addChild(_newYardItem.node);
+            this.yardItems[_key2] = _newYardItem;
+            this.placeItem(_newYardItem, coord);
+          }
+        }
+        willSave && _userState["default"].saveYard(this.data);
+      },
+      saveYardState: function saveYardState() {
+        _userState["default"].saveYard(this.data);
+        this.app.suppliesRefreshRequest = true;
+      },
+      enterEditMode: function enterEditMode(animate) {
+        void 0 === animate && (animate = false);
+        this.editMode = true;
+        this.wireframe.active = true;
+        if (animate) {
+          this.wireframe.opacity = 0;
+          cc.tween(this.wireframe).to(ANIMATION_DURATION, {
+            opacity: 255
+          }, {
+            easing: "quadOut"
+          }).start();
+        } else this.wireframe.opacity = 255;
+        for (var key in this.yardItems) {
+          var yardItem = this.yardItems[key];
+          yardItem.showDeleteButton();
+        }
+        this.selectingItem && this.selectingItem.highlight();
+      },
+      exitEditMode: function exitEditMode(animate) {
+        var _this = this;
+        void 0 === animate && (animate = false);
+        this.editMode = false;
+        this.selectingItem = null;
+        animate ? cc.tween(this.wireframe).to(ANIMATION_DURATION, {
+          opacity: 0
+        }, {
+          easing: "quadOut"
+        }).call(function() {
+          _this.wireframe.active = false;
+        }).start() : this.wireframe.active = false;
+        for (var key in this.yardItems) {
+          var yardItem = this.yardItems[key];
+          yardItem.hideDeleteButton();
+          yardItem.unHighlight();
+        }
+      },
+      isCoordValid: function isCoordValid(coord, config, target) {
+        void 0 === target && (target = null);
+        for (var y = 0; y < config.size.y; y++) for (var x = 0; x < config.size.x; x++) {
+          if (coord.y - y < 0) return false;
+          if (coord.x + x >= _yard["default"].patternSize.x) return false;
+          var checkingCell = this.wireFrameCells[coord.y - y][coord.x + x];
+          if (checkingCell.occupiedBy && checkingCell.occupiedBy !== target) return false;
+          if ("none" === checkingCell.type) return false;
+          if (checkingCell.type !== config.type) return false;
+        }
+        return true;
+      },
+      findValidRandomCoord: function findValidRandomCoord(key) {
+        var itemConfig = _yard["default"].items[key];
+        var validCoords = [];
+        for (var y = 0; y < _yard["default"].patternSize.y; y++) for (var x = 0; x < _yard["default"].patternSize.x; x++) {
+          var coord = {
+            x: x,
+            y: y
+          };
+          this.isCoordValid(coord, itemConfig) && validCoords.push(coord);
+        }
+        return 0 === validCoords.length ? null : validCoords[Math.floor(Math.random() * validCoords.length)];
+      },
+      freeUpSpace: function freeUpSpace(yardItem) {
+        if (yardItem.x >= 0 != null && yardItem.y >= 0) for (var y = 0; y < yardItem.config.size.y && yardItem.y - y >= 0; y++) for (var x = 0; x < yardItem.config.size.x && yardItem.x + x < _yard["default"].patternSize.x; x++) this.wireFrameCells[yardItem.y - y][yardItem.x + x].occupiedBy = null;
+      },
+      placeItem: function placeItem(yardItem, coord) {
+        this.freeUpSpace(yardItem);
+        coord.y -= yardItem.config.size.y - 1;
+        var itemPosition = this.coordToPosition(coord);
+        yardItem.node.x = itemPosition.x + yardItem.config.size.x * WIREFRAME_CELL_SIZE * .5 + yardItem.config.offset.x;
+        yardItem.node.y = itemPosition.y - yardItem.config.size.y * WIREFRAME_CELL_SIZE * .5 + yardItem.config.offset.y;
+        yardItem.node.zIndex = coord.y * _yard["default"].patternSize.x + (_yard["default"].patternSize.x - coord.x);
+        yardItem.x = coord.x;
+        yardItem.y = coord.y;
+        for (var y = 0; y < yardItem.config.size.y && yardItem.y - y >= 0; y++) for (var x = 0; x < yardItem.config.size.x && yardItem.x + x < _yard["default"].patternSize.x; x++) this.wireFrameCells[yardItem.y - y][yardItem.x + x].occupiedBy = yardItem;
+        this.data[yardItem.config.id].x = coord.x;
+        this.data[yardItem.config.id].y = coord.y;
+      },
+      convertToWireframeCoord: function convertToWireframeCoord(viewPos, offset) {
+        offset = offset || new cc.Vec2();
+        var coord = {
+          x: Math.floor((viewPos.x - this.scrollView.x + .5 * this.scrollView.width) / WIREFRAME_CELL_SIZE),
+          y: Math.floor(-(viewPos.y - this.wireframe.y) / WIREFRAME_CELL_SIZE)
+        };
+        var offsetCoord = {
+          x: Math.floor(offset.x / WIREFRAME_CELL_SIZE),
+          y: Math.floor(offset.y / WIREFRAME_CELL_SIZE)
+        };
+        return {
+          x: Math.max(0, Math.min(coord.x - offsetCoord.x, _yard["default"].patternSize.x - 1)),
+          y: Math.max(0, Math.min(coord.y + offsetCoord.y, _yard["default"].patternSize.y - 1))
+        };
+      },
+      coordToPosition: function coordToPosition(coord) {
+        return {
+          x: this.wireframe.x + WIREFRAME_CELL_SIZE * coord.x,
+          y: this.wireframe.y - WIREFRAME_CELL_SIZE * coord.y
+        };
+      },
+      selectItem: function selectItem(item, offset) {
+        this.selectingItem = item;
+        this.home.editModeDragNotification(true);
+        this.editMode && this.selectingItem.highlight();
+        this.draggingOffset = offset;
+      },
+      onItemTouched: function onItemTouched(e, item, offset) {
+        this.onTouchStart(e, item, offset);
+      },
+      onTouchStart: function onTouchStart(e, item, offset) {
         var location = e.getLocation();
-        var _this$node$convertToN = this.node.convertToNodeSpaceAR(location), x = _this$node$convertToN.x;
-        this._prevTouchX = x;
+        this._viewPos = this.node.convertToNodeSpaceAR(location);
+        this._prevTouchX = this._viewPos.x;
+        this._screenX = e.getLocationInView().x;
+        this.isPressing = true;
+        this.pressingTime = 0;
+        if (item) {
+          this.isDragging = true;
+          if (this.selectingItem) {
+            this.selectingItem.unHighlight();
+            this.selectItem(item, offset);
+          } else this.selectItem(item, offset);
+        } else {
+          this.selectingItem && this.selectingItem.unHighlight();
+          this.home.editModeDragNotification(false);
+          this.selectingItem = null;
+        }
       },
       onTouchMove: function onTouchMove(e) {
         var location = e.getLocation();
-        var _this$node$convertToN2 = this.node.convertToNodeSpaceAR(location), x = _this$node$convertToN2.x;
-        this._destX += (x - this._prevTouchX) * SCROLL_DISTANCE_MODIFIER;
-        this._prevTouchX = x;
+        this._viewPos = this.node.convertToNodeSpaceAR(location);
+        this.isDragging && this.editMode || (this._destX += (this._viewPos.x - this._prevTouchX) * SCROLL_DISTANCE_MODIFIER);
+        this._prevTouchX = this._viewPos.x;
+        this._screenX = e.getLocationInView().x;
+        e.getDelta().magSqr() > PRESS_MOVE_SQR_TOLERANCE && (this.isPressing = false);
       },
-      onTouchEnd: function onTouchEnd(e) {},
-      onTouchCancel: function onTouchCancel(e) {},
+      onTouchEnd: function onTouchEnd(e) {
+        this.isPressing = false;
+        this.isDragging = false;
+        this.draggingOffset = null;
+      },
+      onTouchCancel: function onTouchCancel(e) {
+        this.isPressing = false;
+        this.isDragging = false;
+        this.draggingOffset = null;
+      },
+      onItemDeleted: function onItemDeleted(item) {
+        if (this.selectingItem === item) {
+          this.selectingItem.unHighlight();
+          this.home.editModeDragNotification(false);
+          this.selectingItem = null;
+        }
+        delete this.data[item.config.id];
+        delete this.yardItems[item.config.id];
+        item.node.destroy();
+      },
       updateScreenSize: function updateScreenSize(frame, uiScale) {
-        this.node.scale = uiScale;
         this.node.width = this.node.parent.width;
       }
     });
     cc._RF.pop();
   }, {
-    "../helpers": "helpers"
+    "../helpers": "helpers",
+    "../staticData/yard": "yard",
+    "../userState": "userState"
   } ],
   app: [ function(require, module, exports) {
     "use strict";
@@ -5290,6 +6321,9 @@ window.__require = function e(t, n, r) {
         this.now = 0;
         this.noise = new _simplexNoise["default"]();
         this.scheduler = new _Scheduler["default"](this);
+        this.yardViewRefreshRequest = false;
+        this.boostersRefreshRequest = false;
+        this.suppliesRefreshRequest = false;
       },
       onEnable: function onEnable() {
         this.info("app.js - onEnable");
@@ -5619,7 +6653,7 @@ window.__require = function e(t, n, r) {
       };
       return _extends.apply(this, arguments);
     }
-    var _data, _levelMap;
+    var _data;
     function getLevel(levelID) {
       _data = _data || {};
       _data[levelID] = _data[levelID] || parseLevel(levelID, _levels["default"][levelID]);
@@ -6149,6 +7183,43 @@ window.__require = function e(t, n, r) {
     function saveBoostersState() {
       localStorage.setItem("userState.boosters", JSON.stringify(boosters));
     }
+    var defaultYardData = {
+      bed: {
+        x: 2,
+        y: 1
+      },
+      swing: {
+        x: 11,
+        y: 0
+      },
+      stretchingBoard: {
+        x: 10,
+        y: 2
+      },
+      tent: {
+        x: 6,
+        y: 3
+      },
+      swimRing: {
+        x: 14,
+        y: 2
+      }
+    };
+    function getYard() {
+      var dataString = localStorage.getItem("userState.yardItems");
+      return dataString ? JSON.parse(dataString) : defaultYardData;
+    }
+    function saveYard(data) {
+      localStorage.setItem("userState.yardItems", JSON.stringify(data));
+    }
+    var defaultSuppliesData = [ "tunnel", "tower", "tent", "swing", "swimRing", "stretchingBoard", "rubberBallRed", "rubberBallRainbow", "pot", "plushDoll", "paperBag2", "paperBag1", "hamburgerCushion3", "hamburgerCushion2", "hamburgerCushion1", "featherToy", "cushionPink", "cushionOrange", "cushionBlue", "bed" ];
+    function getSupplies() {
+      var dataString = localStorage.getItem("userState.supplies");
+      return dataString ? JSON.parse(dataString) : defaultSuppliesData;
+    }
+    function saveSupplies(data) {
+      localStorage.setItem("userState.supplies", JSON.stringify(data));
+    }
     function clear() {
       boosters = null;
       coin = null;
@@ -6165,6 +7236,10 @@ window.__require = function e(t, n, r) {
       getBoosters: getBoosters,
       getSelectedBoosterCount: getSelectedBoosterCount,
       saveBoostersState: saveBoostersState,
+      getYard: getYard,
+      saveYard: saveYard,
+      getSupplies: getSupplies,
+      saveSupplies: saveSupplies,
       clear: clear
     };
     exports["default"] = _default;
@@ -6173,5 +7248,227 @@ window.__require = function e(t, n, r) {
   }, {
     "./constants": "constants",
     "./models/levelModel": "levelModel"
-  } ]
-}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "SubsceneController", "TopUI", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "Game", "Home", "levels", "shop", "userState" ]);
+  } ],
+  yardModel: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "a10e4uDHl5GI53INdE66dty", "yardModel");
+    "use strict";
+    cc._RF.pop();
+  }, {} ],
+  yard: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "d18035ArTRGVoA19C73IMkX", "yard");
+    "use strict";
+    exports.__esModule = true;
+    exports["default"] = void 0;
+    var O = "none";
+    var n = "normal";
+    var w = "water";
+    var t = "tree";
+    var color_none = new cc.Color(0, 0, 0);
+    var color_normal = new cc.Color(0, 0, 0);
+    var color_water = new cc.Color(0, 0, 220);
+    var color_tree = new cc.Color(255, 0, 0);
+    var colors = {
+      none: {
+        color: color_none,
+        opacity: 128
+      },
+      normal: {
+        color: color_normal,
+        opacity: 28
+      },
+      water: {
+        color: color_water,
+        opacity: 66
+      },
+      tree: {
+        color: color_tree,
+        opacity: 128
+      }
+    };
+    var pattern = [ [ O, O, O, n, n, n, O, O, n, n, n, t, O, O, O, n, n, n, n, n ], [ O, O, n, n, n, O, O, n, n, n, n, n, n, O, O, O, n, n, n, n ], [ O, O, O, n, O, O, n, n, n, n, n, n, w, w, w, w, O, n, n, O ], [ O, O, O, O, O, O, n, n, n, n, n, n, w, w, w, w, n, n, n, n ] ];
+    var patternSize = {
+      x: pattern[0].length,
+      y: pattern.length
+    };
+    var items = {
+      bed: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      cushionBlue: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      cushionRed: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      cushionOrange: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      cushionPink: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      featherToy: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        },
+        offset: {
+          x: 0,
+          y: 100
+        }
+      },
+      hamburgerCushion1: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      hamburgerCushion2: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      hamburgerCushion3: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      paperBag1: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      paperBag2: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      plushDoll: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      pot: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      rubberBallRainbow: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      rubberBallRed: {
+        type: n,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      stretchingBoard: {
+        type: n,
+        size: {
+          x: 2,
+          y: 1
+        }
+      },
+      swimRing: {
+        type: w,
+        size: {
+          x: 1,
+          y: 1
+        }
+      },
+      swing: {
+        type: t,
+        size: {
+          x: 1,
+          y: 1
+        },
+        offset: {
+          x: 0,
+          y: 247
+        }
+      },
+      tent: {
+        type: n,
+        size: {
+          x: 2,
+          y: 1
+        },
+        offset: {
+          x: 0,
+          y: 100
+        },
+        buttonOffset: {
+          x: -80,
+          y: -140
+        }
+      },
+      tower: {
+        type: n,
+        size: {
+          x: 2,
+          y: 1
+        },
+        offset: {
+          x: 0,
+          y: 112
+        }
+      },
+      tunnel: {
+        type: n,
+        size: {
+          x: 3,
+          y: 1
+        }
+      }
+    };
+    var _default = {
+      pattern: pattern,
+      patternSize: patternSize,
+      colors: colors,
+      items: items
+    };
+    exports["default"] = _default;
+    module.exports = exports["default"];
+    cc._RF.pop();
+  }, {} ]
+}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "SubsceneController", "TopUI", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "levels", "shop", "yard", "userState" ]);
