@@ -603,6 +603,7 @@ window.__require = function e(t, n, r) {
         });
       },
       onSupplyItemClicked: function onSupplyItemClicked(id) {
+        if (this.supplyItems[id].isPlaced) return;
         if (this.supplyItems[id].isHighlight) {
           this.supplyItems[id].unHighlight();
           this.selectingSuppliesCount--;
@@ -754,10 +755,10 @@ window.__require = function e(t, n, r) {
         this.data = data;
         this.onItemClicked = onItemClicked;
         this.icon.spriteFrame = this[data.id];
-        this.icon.node.active = !data.isPlaced;
-        this.placedIcon.active = data.isPlaced;
+        data.isPlaced && this.setPlaced();
       },
       setPlaced: function setPlaced() {
+        this.isPlaced = true;
         this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
         this.placedIcon = this.node.getChildByName("placed-icon");
         this.icon.node.active = false;
@@ -782,14 +783,13 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "73f37xT8fJBY4i4PELSjVmR", "BoosterController");
     "use strict";
-    var _constants = _interopRequireDefault(require("../constants"));
     var _userState = _interopRequireDefault(require("../userState"));
+    var _boosters = _interopRequireDefault(require("../staticData/boosters"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
       };
     }
-    var BOOSTER_TYPES = _constants["default"].GAMEPLAY.BOOSTER_TYPES;
     var ITEM_SIZE = 160;
     var ITEM_SPACING = 30;
     var ITEM_FIRST_POSITION = [ 0, 20 ];
@@ -802,43 +802,43 @@ window.__require = function e(t, n, r) {
           type: cc.Prefab
         }
       },
+      init: function init() {
+        this.cancelBoosterButton = this.node.getChildByName("cancelBoosterButton");
+        this.cancelBoosterButton.active = false;
+      },
       loadBoosters: function loadBoosters(gameBoard, confirmationPopup) {
-        var _this = this;
         this.gameBoard = gameBoard;
         this.confirmationPopup = confirmationPopup;
         this.data = _userState["default"].getBoosters();
         this.items = {};
         this.lockedUserInteraction = false;
-        this.cancelBoosterButton = this.node.getChildByName("cancelBoosterButton");
         this.container = this.node.getChildByName("container");
         this.cancelBoosterButton.active = false;
         var firstPositionX = ITEM_FIRST_POSITION[0] - (_userState["default"].getSelectedBoosterCount() - 1) * (ITEM_SPACING + ITEM_SIZE) * .5;
         var i = 0;
-        BOOSTER_TYPES.forEach(function(type) {
-          if (_this.data[type] && _this.data[type].selected) {
-            var boosterItem = {};
-            var number = _this.data[type].amount;
-            boosterItem = cc.instantiate(_this.BoosterItem).getComponent("BoosterItem");
-            _this.items[type] = boosterItem;
-            boosterItem.node.parent = _this.container;
-            boosterItem.node.x = firstPositionX + (ITEM_SPACING + ITEM_SIZE) * i;
-            boosterItem.node.y = ITEM_FIRST_POSITION[1] + .5 * _this.node.height;
-            boosterItem.node.scale = ITEM_SIZE / boosterItem.node.width;
-            boosterItem.loadBooster({
-              type: type,
-              number: number
-            }, _this.onItemClicked.bind(_this));
-            i++;
-          }
-        });
+        for (var type in _boosters["default"]) if (this.data[type] && this.data[type].selected) {
+          var boosterItem = {};
+          var number = this.data[type].amount;
+          boosterItem = cc.instantiate(this.BoosterItem).getComponent("BoosterItem");
+          this.items[type] = boosterItem;
+          boosterItem.node.parent = this.container;
+          boosterItem.node.x = firstPositionX + (ITEM_SPACING + ITEM_SIZE) * i;
+          boosterItem.node.y = ITEM_FIRST_POSITION[1] + .5 * this.node.height;
+          boosterItem.node.scale = ITEM_SIZE / boosterItem.node.width;
+          boosterItem.loadBooster({
+            type: type,
+            number: number
+          }, this.onItemClicked.bind(this));
+          i++;
+        }
       },
       onItemClicked: function onItemClicked(type) {
-        var _this2 = this;
+        var _this = this;
         if (this.lockedUserInteraction) return;
         if (!this.gameBoard.isIdle) return;
         if (0 === this.data[type].amount) return;
         "wheel" === type ? this.confirmationPopup.show("Do you want to use Wheel?", function() {
-          _this2.enterBoosterMode(type);
+          _this.enterBoosterMode(type);
         }, true) : this.enterBoosterMode(type);
       },
       onCancelButtonClicked: function onCancelButtonClicked() {
@@ -873,7 +873,7 @@ window.__require = function e(t, n, r) {
     });
     cc._RF.pop();
   }, {
-    "../constants": "constants",
+    "../staticData/boosters": "boosters",
     "../userState": "userState"
   } ],
   BoosterItem: [ function(require, module, exports) {
@@ -909,13 +909,27 @@ window.__require = function e(t, n, r) {
         }
       },
       onLoad: function onLoad() {
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
         this.numberLabel = this.node.getChildByName("number").getComponent(cc.Label);
+        this.redPoint = this.node.getChildByName("redpoint");
+        this.lockIcon = this.node.getChildByName("lockIcon");
       },
       loadBooster: function loadBooster(data, onItemClicked) {
+        void 0 === onItemClicked && (onItemClicked = null);
         this.onItemClicked = onItemClicked;
         this.type = data.type;
-        this.node.getChildByName("icon").getComponent(cc.Sprite).spriteFrame = this[data.type];
+        this.icon.spriteFrame = this[data.type];
         this.numberLabel.string = 0 | data.number;
+        this.icon.node.active = true;
+        this.redPoint.active = true;
+        this.numberLabel.node.active = true;
+        this.lockIcon.active = false;
+      },
+      setLocked: function setLocked() {
+        this.icon.node.active = false;
+        this.redPoint.active = false;
+        this.numberLabel.node.active = false;
+        this.lockIcon.active = true;
       },
       updateNumber: function updateNumber(number) {
         this.numberLabel.string = 0 | number;
@@ -1138,6 +1152,52 @@ window.__require = function e(t, n, r) {
     });
     cc._RF.pop();
   }, {} ],
+  CatView: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "5c9e1L16tlFoY74Ty0CinZy", "CatView");
+    "use strict";
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        bella: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        bob: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        dora: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        leo: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        lily: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        luna: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        max: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        milo: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      loadCat: function loadCat(cat) {
+        this.node.getComponent(cc.Sprite).spriteFrame = this[cat];
+      }
+    });
+    cc._RF.pop();
+  }, {} ],
   ConfirmationController: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "eb639vxdeZL+LoDGmNo9NYm", "ConfirmationController");
@@ -1146,7 +1206,7 @@ window.__require = function e(t, n, r) {
     cc.Class({
       extends: cc.Component,
       properties: {},
-      init: function init() {
+      onLoad: function onLoad() {
         this.backer = this.node.getChildByName("backer");
         this.popup = this.node.getChildByName("popup");
         this.text = this.popup.getChildByName("text").getComponent(cc.Label);
@@ -1520,9 +1580,6 @@ window.__require = function e(t, n, r) {
           _this.startCascade();
           _this.updateIdleState();
         }, LOGIC_UPDATE_INTERVAL);
-        setTimeout(function() {
-          _this.checkMatchesRequest = true;
-        }, 500);
         this.app.IS_DEVELOPMENT && (globalThis.gameBoard = this);
       }
       var _proto = GameBoard.prototype;
@@ -3939,6 +3996,7 @@ window.__require = function e(t, n, r) {
         }
       },
       onLoad: function onLoad() {
+        var _this = this;
         this.app = cc.find("app").getComponent("app");
         this.app.info("Game.js - onLoad");
         this.app.IS_DEVELOPMENT && (globalThis.game = this);
@@ -3950,12 +4008,15 @@ window.__require = function e(t, n, r) {
         this.gameBoardContainer = this.scaleContainer.getChildByName("gameBoardContainer");
         this.spriteCollection = cc.instantiate(this.SpriteCollection).getComponent("SpriteCollection");
         this.topUI = this.scaleContainer.getChildByName("top");
+        this.cat = this.topUI.getChildByName("cat").getComponent("CatView");
         this.bottomUI = this.scaleContainer.getChildByName("bottom");
-        this.boosterController = this.bottomUI.getChildByName("boosterFrame").getComponent("BoosterController");
+        this.boosterFrame = this.bottomUI.getChildByName("boosterFrame");
+        this.boosterController = this.boosterFrame.getComponent("BoosterController");
         var levelLabel = this.topUI.getChildByName("levelLabel").getComponent(cc.Label);
         this.objectiveController = this.topUI.getChildByName("objectiveFrame").getComponent("ObjectiveController");
         this.result = this.scaleContainer.getChildByName("Result").getComponent("ResultController");
         this.confirmation = this.scaleContainer.getChildByName("Confirmation").getComponent("ConfirmationController");
+        this.selectionPopup = this.scaleContainer.getChildByName("SelectionPopup").getComponent("StartSelectionPopup");
         this.gameBoard = null;
         this.levelData = _levelModel["default"].getLevel(_constants["default"].GAME_DESIGN_TEST || currentLevel);
         if (!this.levelData) {
@@ -3964,15 +4025,22 @@ window.__require = function e(t, n, r) {
         }
         this.createBoard(this.levelData);
         this.turns = this.levelData.turns || 0;
+        this.result.node.active = true;
+        this.confirmation.node.active = true;
+        this.selectionPopup.node.active = true;
         this.objectiveController.loadObjectives(this.levelData.objectives, this.onObjectiveCompleted.bind(this));
         levelLabel.string = "LEVEL " + this.levelData.id;
-        this.boosterController.loadBoosters(this.gameBoard, this.confirmation);
+        this.boosterController.init();
         this.result.init({
           onHome: this.loadHome.bind(this),
           onTryAgain: this.reloadGame.bind(this),
           onNextLevel: this.reloadGame.bind(this)
         });
-        this.confirmation.init();
+        this.selectionPopup.init(this.onStartSelectionClosed.bind(this));
+        this.cat.node.active = false;
+        setTimeout(function() {
+          _this.selectionPopup.show(_this.levelData);
+        }, 200);
         this.node.on(cc.Node.EventType.TOUCH_START, this.gameBoard.onTouchStart, this.gameBoard);
         this.node.on(cc.Node.EventType.TOUCH_MOVE, this.gameBoard.onTouchMove, this.gameBoard);
         this.node.on(cc.Node.EventType.TOUCH_END, this.gameBoard.onTouchEnd, this.gameBoard);
@@ -4006,7 +4074,11 @@ window.__require = function e(t, n, r) {
       showResult: function showResult() {
         if (!this.result.isShowing) {
           this.result.setNextButtonState(this.levelData.id === _constants["default"].GAME_DESIGN_TEST || _levelModel["default"].hasNextLevel(this.levelData.id));
-          this.result.show(this.isGameWon, true);
+          if (this.isGameWon && this.levelData.rewards && this.levelData.rewards["supply"]) {
+            var rewardSupplyItem = this.levelData.rewards["supply"];
+            _userState["default"].addSupply(rewardSupplyItem);
+          }
+          this.result.show(this.isGameWon, this.levelData, true);
           this.gameBoard.gameFinished();
         }
       },
@@ -4068,17 +4140,15 @@ window.__require = function e(t, n, r) {
         this.topUI.y = this.scaleContainer.height / 2 - (TOP_AREA_HEIGHT - TOPBG_TOP_MARGIN) * uiScale;
         var pauseButton = this.topUI.getChildByName("pauseButton");
         pauseButton.x = 512 - 80 * uiScale;
-        var cat = this.topUI.getChildByName("cat");
-        cat.y = -14;
-        cat.x = .5 * -this.topUI.width + 20 + .5 * cat.width;
+        this.cat.node.y = -14;
+        this.cat.node.x = .5 * -this.topUI.width + 20 + .5 * this.cat.node.width;
         var wallpaper = this.scaleContainer.getChildByName("wallpaper");
         wallpaper.y = -this.scaleContainer.height / 2;
         wallpaper.height = this.scaleContainer.height - TOP_AREA_HEIGHT * uiScale;
         this.gameBoardContainer.scale = gameBoardMaxSide / (9 * TILE_SIZE);
         this.gameBoardContainer.y = (BOT_AREA_HEIGHT - TOP_AREA_HEIGHT - this.topUI.height + TOPBG_TOP_MARGIN + TOPBG_BOT_MARGIN) * uiScale * .5 + TILE_SIZE / 2 * this.gameBoardContainer.scale;
         this.bottomUI.y = -this.scaleContainer.height / 2;
-        var boosterFrame = this.bottomUI.getChildByName("boosterFrame");
-        boosterFrame.scale = uiScale;
+        this.boosterFrame.scale = uiScale;
         this.result.updateScreenSize(frame);
         this.confirmation.updateScreenSize();
       },
@@ -4098,6 +4168,29 @@ window.__require = function e(t, n, r) {
       },
       onDisable: function onDisable() {
         this.app.info("Game.js - onDisable");
+      },
+      onStartSelectionClosed: function onStartSelectionClosed() {
+        var _this2 = this;
+        this.boosterController.loadBoosters(this.gameBoard, this.confirmation);
+        this.cat.node.active = true;
+        this.cat.loadCat(_userState["default"].getCatStates().selected);
+        var catOriginX = this.cat.node.x;
+        this.cat.node.x -= 300;
+        cc.tween(this.cat.node).to(.5, {
+          x: catOriginX
+        }, {
+          easing: "quadOut"
+        }).start();
+        var boosterFrameOriginY = this.boosterFrame.y;
+        this.boosterFrame.y -= 300;
+        cc.tween(this.boosterFrame).to(.5, {
+          y: boosterFrameOriginY
+        }, {
+          easing: "quadOut"
+        }).start();
+        setTimeout(function() {
+          _this2.gameBoard.checkMatchesRequest = true;
+        }, 400);
       }
     });
     cc._RF.pop();
@@ -4505,21 +4598,21 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "5199dPtNs9JjrSwZMWdw3L8", "QAPanel");
     "use strict";
-    var _constants = _interopRequireDefault(require("../constants"));
     var _userState = _interopRequireDefault(require("../userState"));
+    var _boosters = _interopRequireDefault(require("../staticData/boosters"));
+    var _constants = _interopRequireDefault(require("../constants"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
       };
     }
-    var BOOSTER_TYPES = _constants["default"].GAMEPLAY.BOOSTER_TYPES;
+    var MAX_BOOSTER_SELECTION = _constants["default"].MAX_BOOSTER_SELECTION;
     var ANIMATION_DURATION = .3;
     var MAX_BOOSTER_AMOUNT = 10;
     cc.Class({
       extends: cc.Component,
       properties: {},
       onLoad: function onLoad() {
-        var _this = this;
         this.app = cc.find("app").getComponent("app");
         this.subsceneController = cc.find("Canvas").getComponent("SubsceneController");
         this.home = cc.find("Canvas").getComponent("Home");
@@ -4532,9 +4625,7 @@ window.__require = function e(t, n, r) {
         this.propertyLines = {};
         this.propertyLines["level"] = this.setupPropertyLine(scrollFrame.getChildByName("level"), "level");
         this.propertyLines["coin"] = this.setupPropertyLine(scrollFrame.getChildByName("coin"), "coin");
-        BOOSTER_TYPES.forEach(function(type) {
-          _this.propertyLines["booster_" + type] = _this.setupPropertyLine(scrollFrame.getChildByName("booster_" + type), "booster", type);
-        });
+        for (var type in _boosters["default"]) this.propertyLines["booster_" + type] = this.setupPropertyLine(scrollFrame.getChildByName("booster_" + type), "booster", type);
         resetButton.on("click", this.onResetClicked, this);
       },
       onEnable: function onEnable() {
@@ -4546,6 +4637,10 @@ window.__require = function e(t, n, r) {
         var rightButtonNode = lineNode.getChildByName("rightButton");
         var numberNode = lineNode.getChildByName("number");
         var toggleNode = lineNode.getChildByName("toggle");
+        if ("booster" === type) {
+          var label = lineNode.getChildByName("label").getComponent(cc.Label);
+          label.string = _boosters["default"][subType].name;
+        }
         var propertyLine = {
           type: type,
           subType: subType
@@ -4577,21 +4672,15 @@ window.__require = function e(t, n, r) {
         shopSubscene && shopSubscene.updateCoin();
       },
       loadBoosterSelection: function loadBoosterSelection() {
-        var _this2 = this;
-        var boosterData = _userState["default"].getBoosters();
-        BOOSTER_TYPES.forEach(function(type) {
-          _this2.propertyLines["booster_" + type].toggle.isChecked = boosterData[type].selected;
-        });
+        var boosters = _userState["default"].getBoosters();
+        for (var type in _boosters["default"]) this.propertyLines["booster_" + type].toggle.isChecked = boosters[type].selected;
       },
       loadBoosterAmount: function loadBoosterAmount() {
-        var _this3 = this;
-        var boosterData = _userState["default"].getBoosters();
-        BOOSTER_TYPES.forEach(function(type) {
-          _this3.propertyLines["booster_" + type].number.string = boosterData[type].amount;
-        });
+        var boosters = _userState["default"].getBoosters();
+        for (var type in _boosters["default"]) this.propertyLines["booster_" + type].number.string = boosters[type].amount;
       },
       show: function show(animate) {
-        var _this4 = this;
+        var _this = this;
         void 0 === animate && (animate = false);
         this.node.active = true;
         if (animate) {
@@ -4601,12 +4690,12 @@ window.__require = function e(t, n, r) {
           }, {
             easing: "quadOut"
           }).call(function() {
-            _this4.animating = false;
+            _this.animating = false;
           }).start();
         } else this.node.opacity = 255;
       },
       hide: function hide(animate) {
-        var _this5 = this;
+        var _this2 = this;
         void 0 === animate && (animate = false);
         if (animate) {
           this.animating = true;
@@ -4615,8 +4704,8 @@ window.__require = function e(t, n, r) {
           }, {
             easing: "quadOut"
           }).call(function() {
-            _this5.node.active = false;
-            _this5.animating = false;
+            _this2.node.active = false;
+            _this2.animating = false;
           }).start();
         } else {
           this.node.active = false;
@@ -4639,8 +4728,8 @@ window.__require = function e(t, n, r) {
           _userState["default"].updateCoin(-1e3);
           this.loadCoin();
         } else if ("booster" === type) {
-          var boosterData = _userState["default"].getBoosters();
-          boosterData[subType].amount = Math.max(boosterData[subType].amount - 1, 0);
+          var boosters = _userState["default"].getBoosters();
+          boosters[subType].amount = Math.max(boosters[subType].amount - 1, 0);
           _userState["default"].saveBoostersState();
           this.loadBoosterAmount();
           this.app.boostersRefreshRequest = true;
@@ -4657,8 +4746,9 @@ window.__require = function e(t, n, r) {
           _userState["default"].updateCoin(1e3);
           this.loadCoin();
         } else if ("booster" === type) {
-          var boosterData = _userState["default"].getBoosters();
-          boosterData[subType].amount = Math.min(boosterData[subType].amount + 1, MAX_BOOSTER_AMOUNT);
+          var boosters = _userState["default"].getBoosters();
+          boosters[subType].amount = Math.min(boosters[subType].amount + 1, MAX_BOOSTER_AMOUNT);
+          boosters[subType].unlocked = true;
           _userState["default"].saveBoostersState();
           this.loadBoosterAmount();
           this.app.boostersRefreshRequest = true;
@@ -4670,8 +4760,12 @@ window.__require = function e(t, n, r) {
         var type = propertyLine.type, subType = propertyLine.subType;
         var checkValue = event.isChecked;
         if ("booster" === type) {
-          var boosterData = _userState["default"].getBoosters();
-          boosterData[subType].selected = checkValue;
+          var boosters = _userState["default"].getBoosters();
+          if (checkValue && (_userState["default"].getSelectedBoosterCount() >= MAX_BOOSTER_SELECTION || !boosters[subType].unlocked)) {
+            event.isChecked = false;
+            return;
+          }
+          boosters[subType].selected = checkValue;
           _userState["default"].saveBoostersState();
           this.loadBoosterSelection();
           this.app.boostersRefreshRequest = true;
@@ -4693,24 +4787,112 @@ window.__require = function e(t, n, r) {
     cc._RF.pop();
   }, {
     "../constants": "constants",
+    "../staticData/boosters": "boosters",
     "../userState": "userState"
   } ],
   ResultController: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "9cc922XOqxKxZQ+UNAiGlw2", "ResultController");
     "use strict";
+    var _yard = _interopRequireDefault(require("../staticData/yard"));
+    var _userState = _interopRequireDefault(require("../userState"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
     var EMPTY_METHOD = function EMPTY_METHOD() {};
     var PROGRESS_FRAME_OFFSET = 26;
     var CONGRAT_SPACING = 50;
     var CAT_SPACING = 10;
     cc.Class({
       extends: cc.Component,
-      properties: {},
-      init: function init(options) {
-        this.animating = false;
-        this.isShowing = true;
+      properties: {
+        bed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionBlue: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionOrange: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionPink: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        featherToy: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        plushDoll: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        pot: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRainbow: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        stretchingBoard: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swimRing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tent: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tower: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tunnel: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      onLoad: function onLoad() {
+        this.app = cc.find("app").getComponent("app");
         this.backer = this.node.getChildByName("resultBacker");
-        this.cat = this.node.getChildByName("cat");
+        this.cat = this.node.getChildByName("cat").getComponent(sp.Skeleton);
         this.topUI = this.node.getChildByName("TopUI").getComponent("TopUI");
         this.progressFrame = this.node.getChildByName("ProgressFrame").getComponent("ProgressFrame");
         this.loseHeartFrame = this.node.getChildByName("LoseHeartFrame");
@@ -4721,11 +4903,32 @@ window.__require = function e(t, n, r) {
         this.loseFrame = this.popup.getChildByName("loseFrame");
         this.confetti = this.node.getChildByName("confetti");
         this.congrat = this.node.getChildByName("congratulations");
+        this.unlockItemFrame = this.node.getChildByName("unlockItemFrame");
+        var bottomContent = this.unlockItemFrame.getChildByName("bottomContent");
+        var putInBagButton = bottomContent.getChildByName("putInBagButton");
+        this.originButtonY = putInBagButton.y;
+        this.nextAction = EMPTY_METHOD;
+        this.animating = false;
+        this.isShowing = true;
+        this.uiScale = 1;
+        this.unlockItemFrame.active = false;
+        this.hide();
+      },
+      update: function update(dt) {
+        var lightstar = this.unlockItemFrame.getChildByName("lightstar");
+        if (lightstar.active) {
+          var lightstar1 = lightstar.getChildByName("lightstar1");
+          var lightstar2 = lightstar.getChildByName("lightstar2");
+          lightstar1.angle += 20 * dt;
+          lightstar2.angle += 20 * dt;
+          lightstar1.scale = .9 + .05 * Math.sin(this.app.now / 1e3 * 4);
+          lightstar2.scale = .9 + .1 * Math.cos((this.app.now + 1e3) / 1e3 * 5);
+        }
+      },
+      init: function init(options) {
         this.onHomeCb = options.onHome || EMPTY_METHOD;
         this.onTryAgainCb = options.onTryAgain || EMPTY_METHOD;
         this.onNextLevelCb = options.onNextLevel || EMPTY_METHOD;
-        this.uiScale = 1;
-        this.hide();
       },
       hide: function hide(animate) {
         var _this = this;
@@ -4747,34 +4950,46 @@ window.__require = function e(t, n, r) {
             opacity: 255
           }, {
             easing: "sineOut"
+          }).call(function() {
+            _this.congrat.active = false;
           }).start();
           _this.loseHeartFrame.active && cc.tween(_this.loseHeartFrame).delay(COMPONENT_DELAY).to(POPUP_DURATION, {
             scale: 0,
             opacity: 255
           }, {
             easing: "sineOut"
+          }).call(function() {
+            _this.loseHeartFrame.active = false;
           }).start();
           _this.progressFrame.node.active && cc.tween(_this.progressFrame.node).delay(COMPONENT_DELAY).to(POPUP_DURATION / 2, {
             y: _this.node.height / 2 + _this.progressFrame.node.height * _this.uiScale
           }, {
             easing: "sineIn"
+          }).call(function() {
+            _this.progressFrame.node.active = false;
           }).start();
           _this.topUI.node.active && cc.tween(_this.topUI.node).delay(TOP_DELAY).to(POPUP_DURATION / 2, {
             y: _this.node.height / 2 + _this.topUI.node.height * _this.uiScale
           }, {
             easing: "sineIn"
+          }).call(function() {
+            _this.topUI.node.active = false;
           }).start();
           cc.tween(_this.popup).delay(POPUP_DELAY).to(POPUP_DURATION, {
             scale: 0,
             opacity: 255
           }, {
             easing: "sineOut"
+          }).call(function() {
+            _this.popup.active = false;
           }).start();
-          cc.tween(_this.cat).delay(COMPONENT_DELAY).to(POPUP_DURATION, {
-            y: -_this.node.height / 2 - _this.cat.height,
+          cc.tween(_this.cat.node).delay(COMPONENT_DELAY).to(POPUP_DURATION, {
+            y: -_this.node.height / 2 - _this.cat.node.height,
             opacity: 0
           }, {
             easing: "sineOut"
+          }).call(function() {
+            _this.cat.node.active = false;
           }).start();
           setTimeout(function() {
             _this.animating = false;
@@ -4783,9 +4998,14 @@ window.__require = function e(t, n, r) {
           }, 1e3 * (COMPONENT_DELAY + POPUP_DURATION + .1));
         });
       },
-      show: function show(result, animate) {
+      show: function show(result, data, animate) {
         var _this2 = this;
         void 0 === animate && (animate = false);
+        this.result = result;
+        this.levelData = data;
+        this.cat.setSkin(result ? "whietcat" : "orangecat");
+        this.cat.setAnimation(0, result ? "Cat_thumb" : "Cat_cry", true);
+        this.cat.getCurrent(0).timeScale = 0;
         return new Promise(function(resolve) {
           _this2.isShowing = true;
           _this2.node.active = true;
@@ -4804,6 +5024,7 @@ window.__require = function e(t, n, r) {
           var CONGRAT_DELAY = result ? .2 : 0;
           var POPUP_DELAY = CONGRAT_DELAY + .2;
           var POPUP_DURATION = result ? .3 : .4;
+          _this2.backer.active = true;
           _this2.backer.opacity = 0;
           cc.tween(_this2.backer).to(.3, {
             opacity: 200
@@ -4811,18 +5032,21 @@ window.__require = function e(t, n, r) {
             easing: "quadOut"
           }).start();
           if (result) {
+            _this2.congrat.active = true;
             _this2.congrat.scale = 0;
             cc.tween(_this2.congrat).delay(CONGRAT_DELAY).to(.4, {
-              scale: 1
+              scale: _this2.uiScale
             }, {
               easing: "backOut"
             }).start();
+            _this2.topUI.node.active = true;
             _this2.topUI.node.y = _this2.node.height / 2 + _this2.topUI.node.height * _this2.uiScale;
             cc.tween(_this2.topUI.node).delay(.9 + CONGRAT_DELAY).to(.5, {
               y: _this2.node.height / 2
             }, {
               easing: "backOut"
             }).start();
+            _this2.progressFrame.node.active = true;
             _this2.progressFrame.node.y = _this2.node.height / 2 + _this2.progressFrame.node.height * _this2.uiScale;
             cc.tween(_this2.progressFrame.node).delay(1.3 + CONGRAT_DELAY).to(.5, {
               y: .5 * _this2.node.height - PROGRESS_FRAME_OFFSET * _this2.uiScale
@@ -4830,6 +5054,7 @@ window.__require = function e(t, n, r) {
               easing: "backOut"
             }).start();
           } else {
+            _this2.loseHeartFrame.active = true;
             _this2.loseHeartFrame.scale = 0;
             _this2.loseHeartFrame.opacity = 0;
             cc.tween(_this2.loseHeartFrame).delay(.9 + CONGRAT_DELAY).to(.5, {
@@ -4839,6 +5064,7 @@ window.__require = function e(t, n, r) {
               easing: "backOut"
             }).start();
           }
+          _this2.popup.active = true;
           _this2.popup.scale = 0;
           _this2.popup.opacity = 0;
           cc.tween(_this2.popup).delay(POPUP_DELAY).to(POPUP_DURATION, {
@@ -4847,13 +5073,16 @@ window.__require = function e(t, n, r) {
           }, {
             easing: "quadOut"
           }).start();
-          _this2.cat.y = -_this2.node.height / 2 - _this2.cat.height * _this2.uiScale;
-          _this2.cat.opacity = -255;
-          cc.tween(_this2.cat).delay(.8 + CONGRAT_DELAY).to(.6, {
-            y: -_this2.node.height / 2,
+          _this2.cat.node.active = true;
+          _this2.cat.node.y = -_this2.node.height / 2 - _this2.cat.node.height * _this2.uiScale;
+          _this2.cat.node.opacity = -255;
+          cc.tween(_this2.cat.node).delay(.8 + CONGRAT_DELAY).to(.6, {
+            y: -_this2.node.height / 2 + 10,
             opacity: 255
           }, {
             easing: "cubicOut"
+          }).call(function() {
+            _this2.cat.getCurrent(0).timeScale = 1;
           }).start();
           result && _this2.confetti.children.forEach(function(paper) {
             var time = .8 + .4 * Math.random();
@@ -4893,6 +5122,178 @@ window.__require = function e(t, n, r) {
           }, 1e3 * (POPUP_DURATION + POPUP_DELAY));
         });
       },
+      hideUnlockItem: function hideUnlockItem() {
+        var _this3 = this;
+        var FIRST_DELAY = .1;
+        var COMPONENT_DELAY = FIRST_DELAY + .3;
+        var SECOND_COMPONENT_DELAY = COMPONENT_DELAY + .2;
+        var ANIM_DURATION = .5;
+        this.animating = true;
+        var congrat = this.unlockItemFrame.getChildByName("congratulations");
+        var halowhite = this.unlockItemFrame.getChildByName("halowhite");
+        var haloblue = this.unlockItemFrame.getChildByName("haloblue");
+        var lightstar = this.unlockItemFrame.getChildByName("lightstar");
+        var star1 = this.unlockItemFrame.getChildByName("star1").getComponent(cc.ParticleSystem);
+        var star2 = this.unlockItemFrame.getChildByName("star2").getComponent(cc.ParticleSystem);
+        var unlockedItemSprite = this.unlockItemFrame.getChildByName("unlockedItem").getComponent(cc.Sprite);
+        var bottomContent = this.unlockItemFrame.getChildByName("bottomContent");
+        var unlockLabel = bottomContent.getChildByName("label");
+        var itemName = bottomContent.getChildByName("itemName").getComponent(cc.Label);
+        var placeItNowButton = bottomContent.getChildByName("placeItNowButton").getComponent(cc.Button);
+        var putInBagButton = bottomContent.getChildByName("putInBagButton").getComponent(cc.Button);
+        star1.stopSystem();
+        star2.stopSystem();
+        cc.tween(congrat).delay(FIRST_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(halowhite).delay(COMPONENT_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(haloblue).delay(COMPONENT_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(lightstar).delay(COMPONENT_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(unlockedItemSprite.node).delay(COMPONENT_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(unlockLabel).delay(SECOND_COMPONENT_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(itemName.node).delay(SECOND_COMPONENT_DELAY).to(ANIM_DURATION, {
+          scale: 0
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(placeItNowButton.node).delay(FIRST_DELAY).to(ANIM_DURATION, {
+          opacity: 0,
+          y: this.originButtonY - 200
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(putInBagButton.node).delay(FIRST_DELAY).to(ANIM_DURATION, {
+          opacity: 0,
+          y: this.originButtonY - 200
+        }, {
+          easing: "quadOut"
+        }).start();
+        return new Promise(function(resolve) {
+          setTimeout(function() {
+            _this3.animating = false;
+            _this3.node.active = false;
+            resolve();
+          }, 1e3 * (SECOND_COMPONENT_DELAY + ANIM_DURATION + .1));
+        });
+      },
+      showUnlockItem: function showUnlockItem(item) {
+        var _this4 = this;
+        var MAX_UNLOCKED_ITEM_SIZE = 540;
+        var CONGRAT_DELAY = .2;
+        var COMPONENT_DELAY = CONGRAT_DELAY + .2;
+        this.animating = true;
+        this.node.active = true;
+        this.unlockItemFrame.active = true;
+        this.unlockedItem = item;
+        var congrat = this.unlockItemFrame.getChildByName("congratulations");
+        var halowhite = this.unlockItemFrame.getChildByName("halowhite");
+        var haloblue = this.unlockItemFrame.getChildByName("haloblue");
+        var lightstar = this.unlockItemFrame.getChildByName("lightstar");
+        var star1 = this.unlockItemFrame.getChildByName("star1").getComponent(cc.ParticleSystem);
+        var star2 = this.unlockItemFrame.getChildByName("star2").getComponent(cc.ParticleSystem);
+        var unlockedItemSprite = this.unlockItemFrame.getChildByName("unlockedItem").getComponent(cc.Sprite);
+        var bottomContent = this.unlockItemFrame.getChildByName("bottomContent");
+        var unlockLabel = bottomContent.getChildByName("label");
+        var itemName = bottomContent.getChildByName("itemName").getComponent(cc.Label);
+        var placeItNowButton = bottomContent.getChildByName("placeItNowButton").getComponent(cc.Button);
+        var putInBagButton = bottomContent.getChildByName("putInBagButton").getComponent(cc.Button);
+        var unlockedItemRatio = Math.max(unlockedItemSprite.node.width / MAX_UNLOCKED_ITEM_SIZE, unlockedItemSprite.node.height / MAX_UNLOCKED_ITEM_SIZE);
+        unlockedItemSprite.node.width /= unlockedItemRatio;
+        unlockedItemSprite.node.height /= unlockedItemRatio;
+        unlockedItemSprite.spriteFrame = this[item];
+        itemName.string = _yard["default"].items[item].name;
+        congrat.scale = 0;
+        cc.tween(congrat).delay(CONGRAT_DELAY).to(.4, {
+          scale: this.uiScale
+        }, {
+          easing: "backOut"
+        }).start();
+        halowhite.scale = 0;
+        haloblue.scale = 0;
+        lightstar.scale = 0;
+        unlockedItemSprite.node.scale = 0;
+        unlockLabel.scale = 0;
+        itemName.node.scale = 0;
+        placeItNowButton.node.opacity = 0;
+        putInBagButton.node.opacity = 0;
+        placeItNowButton.node.y = this.originButtonY - 200;
+        putInBagButton.node.y = this.originButtonY - 200;
+        star1.node.active = false;
+        star2.node.active = false;
+        cc.tween(halowhite).delay(COMPONENT_DELAY).to(.4, {
+          scale: 1
+        }, {
+          easing: "sineOut"
+        }).start();
+        cc.tween(haloblue).delay(COMPONENT_DELAY).to(.4, {
+          scale: 1
+        }, {
+          easing: "sineOut"
+        }).start();
+        cc.tween(lightstar).delay(COMPONENT_DELAY + .1).to(.4, {
+          scale: 1
+        }, {
+          easing: "sineOut"
+        }).start();
+        cc.tween(unlockedItemSprite.node).delay(COMPONENT_DELAY + .1).to(.4, {
+          scale: 1
+        }, {
+          easing: "backOut"
+        }).start();
+        cc.tween(unlockLabel).delay(COMPONENT_DELAY + .2).to(.4, {
+          scale: 1
+        }, {
+          easing: "sineOut"
+        }).start();
+        cc.tween(itemName.node).delay(COMPONENT_DELAY + .3).to(.5, {
+          scale: 1
+        }, {
+          easing: "backOut"
+        }).start();
+        setTimeout(function() {
+          star1.node.active = true;
+          star2.node.active = true;
+          star1.resetSystem();
+          star2.resetSystem();
+        }, 1e3 * (COMPONENT_DELAY + .2));
+        cc.tween(placeItNowButton.node).delay(COMPONENT_DELAY + .8).to(.4, {
+          opacity: 255,
+          y: this.originButtonY
+        }, {
+          easing: "quadOut"
+        }).start();
+        cc.tween(putInBagButton.node).delay(COMPONENT_DELAY + .8).to(.4, {
+          opacity: 255,
+          y: this.originButtonY
+        }, {
+          easing: "quadOut"
+        }).start();
+        setTimeout(function() {
+          _this4.animating = false;
+        }, 1e3 * (COMPONENT_DELAY + 1.2));
+      },
       updateScreenSize: function updateScreenSize(frame) {
         var parent = this.node.parent;
         this.node.width = parent.width;
@@ -4901,11 +5302,11 @@ window.__require = function e(t, n, r) {
         var uiTotalHeight = this.progressFrame.node.height + PROGRESS_FRAME_OFFSET;
         uiTotalHeight += 2 * CONGRAT_SPACING + this.congrat.height;
         uiTotalHeight += this.popup.height;
-        uiTotalHeight += CAT_SPACING + this.cat.height;
+        uiTotalHeight += CAT_SPACING + this.cat.node.height;
         this.uiScale = 1;
         parent.height < uiTotalHeight && (this.uiScale = parent.height / uiTotalHeight);
-        this.cat.y = -this.node.height / 2;
-        this.cat.scale = this.uiScale;
+        this.cat.node.y = -this.node.height / 2;
+        this.cat.node.scale = this.uiScale;
         this.topUI.node.y = .5 * this.node.height;
         this.topUI.updateScreenSize(frame, this.uiScale);
         this.progressFrame.node.y = .5 * this.node.height - PROGRESS_FRAME_OFFSET * this.uiScale;
@@ -4916,39 +5317,80 @@ window.__require = function e(t, n, r) {
         var precalculatedCongratY = this.progressFrame.node.y - (this.progressFrame.node.height + CONGRAT_SPACING + .5 * this.congrat.height) * this.uiScale;
         this.popup.scale = this.uiScale;
         var popupTopAnchor = precalculatedCongratY - (.5 * this.congrat.height + CONGRAT_SPACING) * this.uiScale;
-        var popupBotAnchor = this.cat.y + this.cat.height * this.uiScale;
+        var popupBotAnchor = this.cat.node.y + this.cat.node.height * this.uiScale;
         this.popup.y = .5 * (popupTopAnchor + popupBotAnchor);
         var recalculatedCongratY = this.popup.y + (.5 * this.popup.height + CONGRAT_SPACING + .5 * this.congrat.height) * this.uiScale;
         this.congrat.y = .5 * (precalculatedCongratY + recalculatedCongratY);
         this.congrat.scale = this.uiScale;
         this.confetti.scale = this.uiScale;
         this.confetti.y = this.congrat.y;
+        this.unlockItemFrame.y = .05 * this.node.height;
+        var congrat = this.unlockItemFrame.getChildByName("congratulations");
+        congrat.y = .35 * this.node.height;
+        congrat.scale = this.uiScale;
+        var bottomContent = this.unlockItemFrame.getChildByName("bottomContent");
+        var bottomContentToleranceY = 406 + bottomContent.height;
+        var bottomContentMaxY = .5 * this.node.height;
+        bottomContent.y = -Math.min(bottomContentMaxY, .5 * (bottomContentMaxY - bottomContentToleranceY) + bottomContentToleranceY);
       },
       setNextButtonState: function setNextButtonState(enabled) {
         this.nextButton.node.active = enabled;
         this.homeButton.node.x = enabled ? this.homeButton.node.x : 0;
       },
       onTryAgainClicked: function onTryAgainClicked() {
-        var _this3 = this;
+        var _this5 = this;
         this.animating || this.hide(true).then(function() {
-          return _this3.onTryAgainCb();
+          return _this5.onTryAgainCb();
         });
       },
       onNextClicked: function onNextClicked() {
-        var _this4 = this;
-        this.animating || this.hide(true).then(function() {
-          return _this4.onNextLevelCb();
+        var _this6 = this;
+        if (!this.animating) if (this.result && this.levelData && this.levelData.rewards && this.levelData.rewards["supply"]) {
+          this.nextAction = this.onNextLevelCb;
+          this.hide(true).then(function() {
+            return _this6.showUnlockItem(_this6.levelData.rewards["supply"]);
+          });
+        } else this.hide(true).then(function() {
+          return _this6.onNextLevelCb();
         });
       },
       onHomeClicked: function onHomeClicked() {
-        var _this5 = this;
-        this.animating || this.hide(true).then(function() {
-          return _this5.onHomeCb();
+        var _this7 = this;
+        if (!this.animating) if (this.result && this.levelData && this.levelData.rewards && this.levelData.rewards["supply"]) {
+          this.nextAction = this.onHomeCb;
+          this.hide(true).then(function() {
+            return _this7.showUnlockItem(_this7.levelData.rewards["supply"]);
+          });
+        } else this.hide(true).then(function() {
+          return _this7.onHomeCb();
+        });
+      },
+      onPlaceItNowClicked: function onPlaceItNowClicked() {
+        var _this8 = this;
+        if (!this.animating && this.unlockedItem) {
+          var _yardData = _userState["default"].getYard();
+          _yardData[this.unlockedItem] || (_yardData[this.unlockedItem] = {
+            x: -1,
+            y: -1
+          });
+          _userState["default"].saveYard(_yardData);
+          this.hideUnlockItem().then(function() {
+            return _this8.nextAction();
+          });
+        }
+      },
+      onPutInBagClicked: function onPutInBagClicked() {
+        var _this9 = this;
+        this.animating || this.hideUnlockItem().then(function() {
+          return _this9.nextAction();
         });
       }
     });
     cc._RF.pop();
-  }, {} ],
+  }, {
+    "../staticData/yard": "yard",
+    "../userState": "userState"
+  } ],
   Rnd: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "e2920RCqHhF3ZR1qFh+5ZZN", "Rnd");
@@ -5141,6 +5583,7 @@ window.__require = function e(t, n, r) {
        case "fairystick":
        case "wheel":
         booseterData[itemId].amount++;
+        booseterData[itemId].unlocked = true;
         _userState["default"].saveBoostersState();
       }
       _userState["default"].updateCoin(-totalPrice);
@@ -5573,6 +6016,427 @@ window.__require = function e(t, n, r) {
     });
     cc._RF.pop();
   }, {} ],
+  StartSelectionItem: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "7f6e4MZLENPTZWesyV9JJ20", "StartSelectionItem");
+    "use strict";
+    var MAX_ICON_SIZE = 112;
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        booster_airplane: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        booster_fairystick: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        booster_hammer: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        booster_paintbrush: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        booster_rocket: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        booster_wheel: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_bella: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_bob: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_dora: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_leo: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_lily: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_luna: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_max: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cat_milo: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        lockIcon: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      onLoad: function onLoad() {
+        this.node.on("click", this.onClicked, this);
+      },
+      start: function start() {},
+      loadItem: function loadItem(type, data) {
+        this.type = type;
+        this.data = data;
+        this.selectingBorder = this.node.getChildByName("selectingBorder");
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        this.checkSlot = this.node.getChildByName("checkSlot");
+        this.checkMark = this.node.getChildByName("checkMark");
+        this.quantity = this.node.getChildByName("quantity").getComponent(cc.Label);
+        if (!data.unlocked) {
+          this.setLocked();
+          return;
+        }
+        this.setSelected(data.selected);
+        this.updateIcon(this[type + "_" + data.id], "booster" === type ? 1.1 : 1);
+        if ("booster" === type) {
+          this.quantity.node.active = true;
+          this.quantity.string = data.amount;
+        } else "cat" === type && (this.quantity.node.active = false);
+      },
+      setLocked: function setLocked() {
+        this.updateIcon(this.lockIcon);
+        this.selectingBorder.active = false;
+        this.checkSlot.active = false;
+        this.checkMark.active = false;
+        this.quantity.node.active = false;
+      },
+      setSelected: function setSelected(value) {
+        this.selectingBorder.active = value;
+        this.checkMark.active = value;
+        this.data.selected = value;
+      },
+      updateIcon: function updateIcon(spriteFrame, multiplier) {
+        void 0 === multiplier && (multiplier = 1);
+        this.icon.spriteFrame = spriteFrame;
+        var maxSize = Math.max(this.icon.node.width, this.icon.node.height, MAX_ICON_SIZE);
+        this.icon.node.scale = MAX_ICON_SIZE / maxSize * multiplier;
+      },
+      onClicked: function onClicked() {
+        this.onItemClicked && this.data.unlocked && this.onItemClicked(this);
+      }
+    });
+    cc._RF.pop();
+  }, {} ],
+  StartSelectionPopup: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "6ade0ZPCXRDEb+onzIEqhOC", "StartSelectionPopup");
+    "use strict";
+    var _constants = _interopRequireDefault(require("../constants"));
+    var _userState = _interopRequireDefault(require("../userState"));
+    var _cats = _interopRequireDefault(require("../staticData/cats"));
+    var _boosters = _interopRequireDefault(require("../staticData/boosters"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
+    function _extends() {
+      _extends = Object.assign || function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
+        }
+        return target;
+      };
+      return _extends.apply(this, arguments);
+    }
+    var MAX_BOOSTER_SELECTION = _constants["default"].MAX_BOOSTER_SELECTION;
+    var OBJECTIVE_ITEM_SIZE = 94;
+    var OBJECTIVE_ITEM_SPACING = 36;
+    var SELECTION_ITEM_SIZE = 128;
+    var SELECTION_ITEM_SPACING = 48;
+    var SELECTION_COLUMN = 4;
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        ObjectiveItem: {
+          default: null,
+          type: cc.Prefab
+        },
+        StartSelectionItem: {
+          default: null,
+          type: cc.Prefab
+        }
+      },
+      onLoad: function onLoad() {
+        this.backer = this.node.getChildByName("backer");
+        this.popup = this.node.getChildByName("popup");
+        var frame = this.popup.getChildByName("frame");
+        this.levelLabel = frame.getChildByName("label").getComponent(cc.Label);
+        this.innerFrame = frame.getChildByName("innerFrame");
+        var goalBacker = this.innerFrame.getChildByName("goalBacker");
+        this.objectivesFrame = goalBacker.getChildByName("ObjectivesFrame");
+        this.catView = this.innerFrame.getChildByName("CatView").getComponent("CatView");
+        this.changeCatButton = this.innerFrame.getChildByName("changeCatButton");
+        this.changeBoosterButton = this.innerFrame.getChildByName("changeBoosterButton");
+        this.startButton = this.popup.getChildByName("startButton");
+        this.catSelectionPopup = this.node.getChildByName("catSelection");
+        this.catSelectionFrame = this.catSelectionPopup.getChildByName("frame");
+        this.catSelectionConfirmButton = this.catSelectionPopup.getChildByName("confirmButton");
+        this.boosterSelectionPopup = this.node.getChildByName("boosterSelection");
+        this.boosterSelectionFrame = this.boosterSelectionPopup.getChildByName("frame");
+        this.boosterSelectionConfirmButton = this.boosterSelectionPopup.getChildByName("confirmButton");
+        this.backer.zIndex = -1;
+        this.catSelectionPopup.zIndex = 2;
+        this.boosterSelectionPopup.zIndex = 2;
+        this.catSelectionPopup.active = false;
+        this.boosterSelectionPopup.active = false;
+        this.node.active = false;
+        this.changeCatButton.on("click", this.onCatChangeClicked, this);
+        this.changeBoosterButton.on("click", this.onBoosterChangeClicked, this);
+        this.catSelectionConfirmButton.on("click", this.onCatConfirmClicked, this);
+        this.boosterSelectionConfirmButton.on("click", this.onBoosterConfirmClicked, this);
+        this.startButton.on("click", this.hide, this);
+      },
+      init: function init(onClosed) {
+        this.onClosed = onClosed;
+      },
+      show: function show(levelData) {
+        var _this = this;
+        this.node.active = true;
+        this.animating = true;
+        this.backer.active = true;
+        this.backer.opacity = 0;
+        cc.tween(this.backer).to(.3, {
+          opacity: 200
+        }, {
+          easing: "quadOut"
+        }).start();
+        this.popup.active = true;
+        this.popup.scale = 0;
+        this.popup.opacity = 0;
+        cc.tween(this.popup).delay(.2).to(.3, {
+          scale: 1,
+          opacity: 255
+        }, {
+          easing: "backOut"
+        }).call(function() {
+          _this.animating = false;
+        }).start();
+        this.levelLabel.string = "LEVEL " + levelData.id;
+        var firstPositionX = -(levelData.objectives.length - 1) * (OBJECTIVE_ITEM_SPACING + OBJECTIVE_ITEM_SIZE) * .5;
+        var i = 0;
+        levelData.objectives.forEach(function(objective) {
+          var go = cc.instantiate(_this.ObjectiveItem).getComponent("ObjectiveItem");
+          go.node.parent = _this.objectivesFrame;
+          go.node.x = firstPositionX + (OBJECTIVE_ITEM_SPACING + OBJECTIVE_ITEM_SIZE) * i;
+          go.node.y = 0;
+          go.node.scale = OBJECTIVE_ITEM_SIZE / go.node.width;
+          go.loadObjective(objective);
+          i++;
+        });
+        this.reloadBoosters();
+        this.reloadCat();
+        var startX = .5 * -((SELECTION_COLUMN - 1) * SELECTION_ITEM_SIZE + (SELECTION_COLUMN - 1) * SELECTION_ITEM_SPACING);
+        var catsState = _userState["default"].getCatStates();
+        this.catSelectionList = {};
+        var catRowNumber = Math.ceil(Object.keys(_cats["default"]).length / SELECTION_COLUMN);
+        this.catSelectionFrame.height = catRowNumber * SELECTION_ITEM_SIZE + (catRowNumber + 1) * SELECTION_ITEM_SPACING;
+        var catStartY = this.catSelectionFrame.height - SELECTION_ITEM_SPACING - .5 * SELECTION_ITEM_SIZE;
+        i = 0;
+        for (var type in _cats["default"]) {
+          var item = cc.instantiate(this.StartSelectionItem).getComponent("StartSelectionItem");
+          item.node.parent = this.catSelectionFrame;
+          item.node.x = startX + i % SELECTION_COLUMN * (SELECTION_ITEM_SPACING + SELECTION_ITEM_SIZE);
+          item.node.y = catStartY - Math.floor(i / SELECTION_COLUMN) * (SELECTION_ITEM_SPACING + SELECTION_ITEM_SIZE);
+          item.loadItem("cat", _extends({
+            id: type
+          }, _cats["default"][type], catsState.cats[type], {
+            selected: catsState.selected === type
+          }));
+          item.onItemClicked = this.onSelectionItemClicked.bind(this);
+          this.catSelectionList[type] = item;
+          i++;
+        }
+        var boosters = _userState["default"].getBoosters();
+        this.boosterSelectionList = {};
+        this.boosterSelectionQueue = [];
+        var boosterRowNumber = Math.ceil(Object.keys(_boosters["default"]).length / SELECTION_COLUMN);
+        this.boosterSelectionFrame.height = boosterRowNumber * SELECTION_ITEM_SIZE + (boosterRowNumber + 1) * SELECTION_ITEM_SPACING;
+        var boosterStartY = this.boosterSelectionFrame.height - SELECTION_ITEM_SPACING - .5 * SELECTION_ITEM_SIZE;
+        i = 0;
+        for (var _type in _boosters["default"]) {
+          var _item = cc.instantiate(this.StartSelectionItem).getComponent("StartSelectionItem");
+          _item.node.parent = this.boosterSelectionFrame;
+          _item.node.x = startX + i % SELECTION_COLUMN * (SELECTION_ITEM_SPACING + SELECTION_ITEM_SIZE);
+          _item.node.y = boosterStartY - Math.floor(i / SELECTION_COLUMN) * (SELECTION_ITEM_SPACING + SELECTION_ITEM_SIZE);
+          _item.loadItem("booster", _extends({
+            id: _type
+          }, _boosters["default"][_type], boosters[_type]));
+          _item.onItemClicked = this.onSelectionItemClicked.bind(this);
+          this.boosterSelectionList[_type] = _item;
+          boosters[_type].selected && this.boosterSelectionQueue.push(_type);
+          i++;
+        }
+      },
+      hide: function hide() {
+        var _this2 = this;
+        if (this.animating) return;
+        this.animating = true;
+        cc.tween(this.backer).to(.4, {
+          opacity: 0
+        }, {
+          easing: "sineOut"
+        }).start();
+        cc.tween(this.popup).to(.4, {
+          scale: 0,
+          opacity: 0
+        }, {
+          easing: "quadOut"
+        }).call(function() {
+          _this2.animating = false;
+          _this2.node.active = false;
+          _this2.onClosed && _this2.onClosed();
+        }).start();
+      },
+      reloadBoosters: function reloadBoosters() {
+        var boosters = _userState["default"].getBoosters();
+        var i = 0;
+        for (var type in boosters) {
+          if (i === MAX_BOOSTER_SELECTION) break;
+          var booster = boosters[type];
+          if (booster.selected) {
+            i++;
+            var boosterItemGO = this.innerFrame.getChildByName("BoosterItem_" + i).getComponent("BoosterItem");
+            boosterItemGO.loadBooster({
+              type: type,
+              number: booster.amount
+            });
+          }
+        }
+        while (i < MAX_BOOSTER_SELECTION) {
+          i++;
+          var _boosterItemGO = this.innerFrame.getChildByName("BoosterItem_" + i).getComponent("BoosterItem");
+          _boosterItemGO.setLocked();
+        }
+      },
+      reloadCat: function reloadCat() {
+        var catsState = _userState["default"].getCatStates();
+        this.catView.loadCat(catsState.selected);
+      },
+      onCatChangeClicked: function onCatChangeClicked() {
+        var _this3 = this;
+        if (this.animating) return;
+        this.animating = true;
+        this.catSelectionPopup.active = true;
+        this.catSelectionConfirmButton.active = true;
+        this.backer.zIndex = 1;
+        this.catSelectionFrame.opacity = 0;
+        this.catSelectionFrame.scale = 0;
+        cc.tween(this.catSelectionFrame).to(.3, {
+          scale: 1,
+          opacity: 255
+        }, {
+          easing: "backOut"
+        }).call(function() {
+          _this3.animating = false;
+        }).start();
+      },
+      onBoosterChangeClicked: function onBoosterChangeClicked() {
+        var _this4 = this;
+        if (this.animating) return;
+        this.animating = true;
+        this.boosterSelectionPopup.active = true;
+        this.boosterSelectionConfirmButton.active = true;
+        this.backer.zIndex = 1;
+        this.boosterSelectionFrame.opacity = 0;
+        this.boosterSelectionFrame.scale = 0;
+        cc.tween(this.boosterSelectionFrame).to(.3, {
+          scale: 1,
+          opacity: 255
+        }, {
+          easing: "backOut"
+        }).call(function() {
+          _this4.animating = false;
+        }).start();
+      },
+      onCatConfirmClicked: function onCatConfirmClicked() {
+        var _this5 = this;
+        if (this.animating) return;
+        this.animating = true;
+        this.backer.zIndex = -1;
+        this.catSelectionConfirmButton.active = false;
+        this.reloadCat();
+        cc.tween(this.catSelectionFrame).to(.4, {
+          scale: 0,
+          opacity: 0
+        }, {
+          easing: "cubicOut"
+        }).call(function() {
+          _this5.catSelectionPopup.active = false;
+          _this5.animating = false;
+        }).start();
+      },
+      onBoosterConfirmClicked: function onBoosterConfirmClicked() {
+        var _this6 = this;
+        if (this.animating) return;
+        this.animating = true;
+        this.backer.zIndex = -1;
+        this.boosterSelectionConfirmButton.active = false;
+        this.reloadBoosters();
+        cc.tween(this.boosterSelectionFrame).to(.4, {
+          scale: 0,
+          opacity: 0
+        }, {
+          easing: "cubicOut"
+        }).call(function() {
+          _this6.boosterSelectionPopup.active = false;
+          _this6.animating = false;
+        }).start();
+      },
+      onSelectionItemClicked: function onSelectionItemClicked(item) {
+        if (this.animating) return;
+        if ("cat" === item.type) {
+          if (!item.data.selected) {
+            var catsState = _userState["default"].getCatStates();
+            item.setSelected(true);
+            this.catSelectionList[catsState.selected].setSelected(false);
+            catsState.selected = item.data.id;
+            _userState["default"].saveCatsState();
+          }
+        } else if ("booster" === item.type) {
+          var boosters = _userState["default"].getBoosters();
+          if (item.data.selected) {
+            item.setSelected(false);
+            boosters[item.data.id].selected = false;
+            this.boosterSelectionQueue.splice(this.boosterSelectionQueue.indexOf(item.data.id), 1);
+          } else {
+            if (this.boosterSelectionQueue.length >= MAX_BOOSTER_SELECTION) {
+              var firstSelectedItem = this.boosterSelectionQueue[0];
+              this.boosterSelectionQueue.splice(0, 1);
+              this.boosterSelectionList[firstSelectedItem].setSelected(false);
+              boosters[firstSelectedItem].selected = false;
+            }
+            item.setSelected(true);
+            boosters[item.data.id].selected = true;
+            this.boosterSelectionQueue.push(item.data.id);
+          }
+          _userState["default"].saveBoostersState();
+        }
+      }
+    });
+    cc._RF.pop();
+  }, {
+    "../constants": "constants",
+    "../staticData/boosters": "boosters",
+    "../staticData/cats": "cats",
+    "../userState": "userState"
+  } ],
   SubsceneController: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "aa749nrC1VOrIpHfytA/mmC", "SubsceneController");
@@ -6422,6 +7286,78 @@ window.__require = function e(t, n, r) {
     "./Scheduler.js": "Scheduler",
     "simplex-noise": 1
   } ],
+  boosters: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "8b54bSTPD9NaIaWU/c9bH/9", "boosters");
+    "use strict";
+    exports.__esModule = true;
+    exports["default"] = void 0;
+    var _default = {
+      hammer: {
+        name: "Hammer",
+        description: "Pops one Cube or obstacle of your choice"
+      },
+      airplane: {
+        name: "Airplane",
+        description: "Pops the row of the selected Cube"
+      },
+      rocket: {
+        name: "Rocket",
+        description: "Pops the column of the selected Cube"
+      },
+      fairystick: {
+        name: "Fairystick",
+        description: "Clears all Cubes with the same color as the selected Cube."
+      },
+      paintbrush: {
+        name: "Paintbrush",
+        description: "Changes the color of the selected Cube to the selected color"
+      },
+      wheel: {
+        name: "Wheel",
+        description: "Shuffles all of the cubes on the screen"
+      }
+    };
+    exports["default"] = _default;
+    module.exports = exports["default"];
+    cc._RF.pop();
+  }, {} ],
+  cats: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "cbcddRbkZRO5bc8eg13jjFA", "cats");
+    "use strict";
+    exports.__esModule = true;
+    exports["default"] = void 0;
+    var _default = {
+      bella: {
+        name: "Bella"
+      },
+      bob: {
+        name: "Bob"
+      },
+      dora: {
+        name: "Dora"
+      },
+      leo: {
+        name: "Leo"
+      },
+      lily: {
+        name: "Lily"
+      },
+      luna: {
+        name: "Luna"
+      },
+      max: {
+        name: "Max"
+      },
+      milo: {
+        name: "Milo"
+      }
+    };
+    exports["default"] = _default;
+    module.exports = exports["default"];
+    cc._RF.pop();
+  }, {} ],
   constants: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "d9ff9AXm9hFEpdxsArFgTnl", "constants");
@@ -6437,6 +7373,7 @@ window.__require = function e(t, n, r) {
     var _default = {
       GAME_DESIGN_TEST: GAME_DESIGN_TEST,
       IPAD_RATIO: .75,
+      MAX_BOOSTER_SELECTION: 3,
       GAMEPLAY: {
         TILE_SIZE: TILE_SIZE,
         ITEM_SIZE: ITEM_SIZE,
@@ -6528,8 +7465,7 @@ window.__require = function e(t, n, r) {
           rocketSkinLeft: "Rocket_Left",
           rocketSkinUp: "Rocket_Up",
           rocketSkinDown: "Rocket_Down"
-        },
-        BOOSTER_TYPES: [ "airplane", "rocket", "hammer", "fairystick", "paintbrush", "wheel" ]
+        }
       }
     };
     exports["default"] = _default;
@@ -6727,6 +7663,9 @@ window.__require = function e(t, n, r) {
           type: t,
           amount: 9
         } ],
+        rewards: {
+          supply: "bed"
+        },
         turns: 30,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ O, z, R, R, R, R, R, z, O ], [ z, z, R, R, R, R, R, z, z ], [ R, R, R, R, R, R, R, R, R ], [ O, R, R, R, z, R, R, R, O ], [ O, R, R, R, R, R, R, R, O ], [ R, R, R, R, R, R, R, R, R ], [ R, R, z, z, R, z, z, R, R ], [ t, t, t, t, t, t, t, t, t ], [ O, R, z, z, R, z, z, R, O ] ]
@@ -6736,6 +7675,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 42
         } ],
+        rewards: {
+          supply: "swing"
+        },
         turns: 30,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ z, z, z, z, z, z, z, z, z ], [ z, z, z, z, z, z, z, z, z ], [ z, z, z, O, O, O, z, z, z ], [ z, z, z, z, z, z, z, z, z ], [ z, z, z, z, z, z, z, z, z ] ]
@@ -6751,6 +7693,9 @@ window.__require = function e(t, n, r) {
           type: D,
           amount: 5
         } ],
+        rewards: {
+          supply: "tent"
+        },
         turns: 30,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ], [ R, R, R, R, R, R, R, R, R ] ]
@@ -6763,6 +7708,9 @@ window.__require = function e(t, n, r) {
           type: y,
           amount: 40
         } ],
+        rewards: {
+          supply: "pot"
+        },
         turns: 15,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ r, y, g, b, y, b, g, y, r ], [ y, g, b, y, g, y, b, r, g ], [ g, g, y, b, r, g, y, g, y ], [ r, b, y, r, y, g, r, b, r ], [ b, y, b, g, g, r, g, y, g ], [ r, r, y, g, y, b, y, r, r ], [ g, y, g, b, r, y, b, r, b ], [ b, b, g, y, b, g, y, g, y ], [ r, y, r, b, r, r, y, g, b ] ]
@@ -6775,6 +7723,9 @@ window.__require = function e(t, n, r) {
           type: r,
           amount: 20
         } ],
+        rewards: {
+          supply: "cushionBlue"
+        },
         turns: 22,
         spawnPattern: [ p, p, R, R, R, R, R, p, p ],
         pattern: [ [ p, p, O, O, O, O, O, p, p ], [ p, O, O, O, O, O, O, O, p ], [ O, O, g, b, r, r, b, O, O ], [ O, O, b, y, y, g, y, O, O ], [ O, O, b, b, s, r, b, O, O ], [ O, O, r, y, r, y, g, O, O ], [ O, O, r, r, g, b, b, O, O ], [ p, O, O, O, O, O, O, O, p ], [ p, p, O, O, O, O, O, p, p ] ]
@@ -6784,6 +7735,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 35
         } ],
+        rewards: {
+          supply: "rubberBallRed"
+        },
         turns: 15,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ g, b, g, b, r, r, O, O, O ], [ g, r, r, g, b, b, O, O, O ], [ r, g, b, r, r, g, O, O, O ], [ x, x, x, x, x, x, x, x, x ], [ x, x, x, x, x, x, x, x, x ], [ x, x, x, x, x, x, x, x, x ], [ O, O, O, y, b, g, b, r, x ], [ O, O, O, y, g, r, g, r, x ], [ O, O, O, x, x, x, x, x, x ] ]
@@ -6796,6 +7750,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 36
         } ],
+        rewards: {
+          supply: "hamburgerCushion2"
+        },
         turns: 25,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, B, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ], [ X, X, t, t, t, t, t, X, X ] ]
@@ -6805,6 +7762,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 18
         } ],
+        rewards: {
+          supply: "paperBag2"
+        },
         turns: 25,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ z, r, b, y, g, r, y, r, z ], [ z, y, y, r, O, y, b, y, z ], [ z, g, y, b, O, y, b, y, z ], [ z, r, b, b, O, g, r, g, z ], [ z, r, r, g, O, r, b, b, z ], [ z, g, y, g, O, y, g, y, z ], [ z, b, r, r, O, b, g, r, z ], [ z, r, b, b, O, b, r, r, z ], [ z, r, g, b, O, y, r, y, z ] ]
@@ -6817,6 +7777,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 18
         } ],
+        rewards: {
+          supply: "tower"
+        },
         turns: 22,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ r, b, r, X, X, X, y, g, y ], [ b, r, r, X, X, X, g, y, b ], [ y, s, b, X, X, X, g, s, y ], [ R, y, r, X, X, X, r, b, r ], [ O, O, O, X, X, X, O, O, O ], [ O, O, O, X, X, X, O, O, O ], [ t, t, t, t, t, t, t, t, t ], [ t, t, t, t, t, t, t, t, t ], [ t, t, t, t, t, t, t, t, t ] ]
@@ -6829,6 +7792,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 9
         } ],
+        rewards: {
+          supply: "swimRing"
+        },
         turns: 15,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ O, O, O, O, t, O, O, O, O ], [ O, O, O, y, t, y, O, O, O ], [ O, O, g, g, t, b, b, O, O ], [ O, y, r, g, t, b, r, r, O ], [ z, b, g, r, t, y, b, r, z ], [ O, z, g, g, t, r, b, z, O ], [ O, O, z, g, t, b, z, O, O ], [ O, O, O, z, t, z, O, O, O ], [ O, O, O, O, z, O, O, O, O ] ]
@@ -6841,6 +7807,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 18
         } ],
+        rewards: {
+          supply: "plushDoll"
+        },
         turns: 30,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ r, y, g, b, O, b, g, y, r ], [ y, g, b, y, O, y, b, r, g ], [ t, y, g, g, O, b, b, y, t ], [ t, y, r, g, O, b, r, r, t ], [ t, b, g, r, t, y, b, r, t ], [ t, b, g, g, t, r, b, y, t ], [ O, O, O, O, O, O, O, O, O ], [ x, x, x, x, x, x, x, x, x ], [ x, x, x, x, x, x, x, x, x ] ]
@@ -6850,6 +7819,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 32
         } ],
+        rewards: {
+          supply: "rubberBallRainbow"
+        },
         turns: 30,
         spawnPattern: [ R, R, R, R, R, R, R, R ],
         pattern: [ [ y, r, g, b, X, X, X, X ], [ b, y, y, b, X, X, X, X ], [ g, r, b, r, X, X, X, X ], [ y, b, r, y, X, X, X, X ], [ z, z, z, z, r, r, b, r ], [ z, z, z, z, y, b, y, b ], [ z, z, z, z, g, y, g, y ], [ z, z, z, z, b, g, y, y ] ]
@@ -6862,6 +7834,9 @@ window.__require = function e(t, n, r) {
           type: x,
           amount: 12
         } ],
+        rewards: {
+          supply: "plushDfeatherToyoll"
+        },
         turns: 20,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ O, O, X, O, t, O, X, O, O ], [ O, O, X, O, t, O, X, O, O ], [ O, r, X, g, t, b, X, g, O ], [ O, y, X, g, t, b, X, r, O ], [ O, b, X, r, t, y, X, r, O ], [ O, g, X, g, t, r, X, b, O ], [ O, O, O, O, O, O, O, O, O ], [ y, r, y, r, r, y, b, r, b ], [ O, b, r, g, g, b, r, b, O ] ]
@@ -6924,6 +7899,12 @@ window.__require = function e(t, n, r) {
     "use strict";
     exports.__esModule = true;
     exports["default"] = void 0;
+    var _boosters = _interopRequireDefault(require("./boosters"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
     var _default = {
       fish: {
         name: "Fish",
@@ -6944,46 +7925,48 @@ window.__require = function e(t, n, r) {
         description: "A plenty of fish"
       },
       hammer: {
-        name: "Hammer",
+        name: _boosters["default"].hammer.name,
         quantity: 1,
         price: 1e3,
-        description: "Pops one Cube or obstacle of your choice"
+        description: _boosters["default"].hammer.description
       },
       airplane: {
-        name: "Airplane",
+        name: _boosters["default"].airplane.name,
         quantity: 1,
         price: 1e3,
-        description: "Pops the row of the selected Cube"
+        description: _boosters["default"].airplane.description
       },
       rocket: {
-        name: "Rocket",
+        name: _boosters["default"].rocket.name,
         quantity: 1,
         price: 1e3,
-        description: "Pops the column of the selected Cube"
+        description: _boosters["default"].rocket.description
       },
       fairystick: {
-        name: "Fairystick",
+        name: _boosters["default"].fairystick.name,
         quantity: 1,
         price: 3e3,
-        description: "Clears all Cubes with the same color as the selected Cube."
+        description: _boosters["default"].fairystick.description
       },
       paintbrush: {
-        name: "Paintbrush",
+        name: _boosters["default"].paintbrush.name,
         quantity: 1,
         price: 2800,
-        description: "Changes the color of the selected Cube to the selected color"
+        description: _boosters["default"].paintbrush.description
       },
       wheel: {
-        name: "Wheel",
+        name: _boosters["default"].wheel.name,
         quantity: 1,
         price: 3500,
-        description: "Shuffles all of the cubes on the screen"
+        description: _boosters["default"].wheel.description
       }
     };
     exports["default"] = _default;
     module.exports = exports["default"];
     cc._RF.pop();
-  }, {} ],
+  }, {
+    "./boosters": "boosters"
+  } ],
   simpleCrate: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "fa738Oak3FPYJNDVjkJX82x", "simpleCrate");
@@ -7112,21 +8095,29 @@ window.__require = function e(t, n, r) {
     "use strict";
     exports.__esModule = true;
     exports["default"] = void 0;
-    var _constants = _interopRequireDefault(require("./constants"));
     var _levelModel = _interopRequireDefault(require("./models/levelModel"));
+    var _boosters = _interopRequireDefault(require("./staticData/boosters"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
       };
     }
-    var BOOSTER_TYPES = _constants["default"].GAMEPLAY.BOOSTER_TYPES;
-    var INIT_BOOSTER_SELECTED = 3;
-    var INIT_BOOSTER_AMOUNT = 5;
+    function _extends() {
+      _extends = Object.assign || function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
+        }
+        return target;
+      };
+      return _extends.apply(this, arguments);
+    }
     var INIT_COIN = 5e3;
     var INIT_FISH = 10;
     var boosters = null;
     var coin = null;
     var fish = null;
+    var catStates = null;
     function getCoin() {
       coin = coin || Number.parseInt(localStorage.getItem("userState.coin") || INIT_COIN);
       return coin;
@@ -7155,19 +8146,43 @@ window.__require = function e(t, n, r) {
       progressId = Math.min(Math.max(progressId + step, 0), map.length - 1);
       localStorage.setItem("userState.level", map[progressId]);
     }
+    var defaultBoosters = {
+      hammer: {
+        amount: 3,
+        selected: true,
+        unlocked: true
+      },
+      airplane: {
+        amount: 3,
+        selected: true,
+        unlocked: true
+      },
+      rocket: {
+        amount: 3,
+        selected: false,
+        unlocked: true
+      },
+      fairystick: {
+        amount: 0,
+        selected: false,
+        unlocked: false
+      },
+      paintbrush: {
+        amount: 0,
+        selected: false,
+        unlocked: false
+      },
+      wheel: {
+        amount: 0,
+        selected: false,
+        unlocked: false
+      }
+    };
     function getBoosters() {
       if (!boosters) {
         var rawData = localStorage.getItem("userState.boosters");
         if (rawData) boosters = JSON.parse(rawData); else {
-          boosters = {};
-          var freeSelectionSlot = INIT_BOOSTER_SELECTED;
-          BOOSTER_TYPES.forEach(function(type) {
-            boosters[type] = {
-              amount: INIT_BOOSTER_AMOUNT,
-              selected: freeSelectionSlot > 0
-            };
-            freeSelectionSlot--;
-          });
+          boosters = _extends({}, defaultBoosters);
           this.saveBoostersState();
         }
       }
@@ -7175,33 +8190,57 @@ window.__require = function e(t, n, r) {
     }
     function getSelectedBoosterCount() {
       var count = 0;
-      boosters && BOOSTER_TYPES.forEach(function(type) {
-        boosters[type] && boosters[type].selected && count++;
-      });
+      if (boosters) for (var type in _boosters["default"]) boosters[type] && boosters[type].selected && count++;
       return count;
     }
     function saveBoostersState() {
       localStorage.setItem("userState.boosters", JSON.stringify(boosters));
     }
+    var defaultCatState = {
+      selected: "bella",
+      cats: {
+        bella: {
+          unlocked: true
+        },
+        bob: {
+          unlocked: true
+        },
+        dora: {
+          unlocked: true
+        },
+        leo: {
+          unlocked: true
+        },
+        lily: {
+          unlocked: true
+        },
+        luna: {
+          unlocked: true
+        },
+        max: {
+          unlocked: false
+        },
+        milo: {
+          unlocked: false
+        }
+      }
+    };
+    function getCatStates() {
+      if (!catStates) {
+        var rawData = localStorage.getItem("userState.catStates");
+        if (rawData) catStates = JSON.parse(rawData); else {
+          catStates = _extends({}, defaultCatState);
+          this.saveCatsState();
+        }
+      }
+      return catStates;
+    }
+    function saveCatsState() {
+      localStorage.setItem("userState.catStates", JSON.stringify(catStates));
+    }
     var defaultYardData = {
-      bed: {
-        x: 2,
-        y: 1
-      },
-      swing: {
-        x: 11,
-        y: 0
-      },
-      stretchingBoard: {
-        x: 10,
-        y: 2
-      },
-      tent: {
-        x: 6,
-        y: 3
-      },
-      swimRing: {
-        x: 14,
+      tunnel: {
+        x: 9,
         y: 2
       }
     };
@@ -7212,10 +8251,17 @@ window.__require = function e(t, n, r) {
     function saveYard(data) {
       localStorage.setItem("userState.yardItems", JSON.stringify(data));
     }
-    var defaultSuppliesData = [ "tunnel", "tower", "tent", "swing", "swimRing", "stretchingBoard", "rubberBallRed", "rubberBallRainbow", "pot", "plushDoll", "paperBag2", "paperBag1", "hamburgerCushion3", "hamburgerCushion2", "hamburgerCushion1", "featherToy", "cushionPink", "cushionOrange", "cushionBlue", "bed" ];
+    var defaultSuppliesData = [ "tunnel" ];
     function getSupplies() {
       var dataString = localStorage.getItem("userState.supplies");
       return dataString ? JSON.parse(dataString) : defaultSuppliesData;
+    }
+    function addSupply(item) {
+      var supplies = getSupplies();
+      if (!supplies.includes(item)) {
+        supplies.push(item);
+        saveSupplies(supplies);
+      }
     }
     function saveSupplies(data) {
       localStorage.setItem("userState.supplies", JSON.stringify(data));
@@ -7224,6 +8270,7 @@ window.__require = function e(t, n, r) {
       boosters = null;
       coin = null;
       fish = null;
+      catStates = null;
       localStorage.clear();
     }
     var _default = {
@@ -7236,18 +8283,20 @@ window.__require = function e(t, n, r) {
       getBoosters: getBoosters,
       getSelectedBoosterCount: getSelectedBoosterCount,
       saveBoostersState: saveBoostersState,
+      getCatStates: getCatStates,
+      saveCatsState: saveCatsState,
       getYard: getYard,
       saveYard: saveYard,
       getSupplies: getSupplies,
-      saveSupplies: saveSupplies,
+      addSupply: addSupply,
       clear: clear
     };
     exports["default"] = _default;
     module.exports = exports["default"];
     cc._RF.pop();
   }, {
-    "./constants": "constants",
-    "./models/levelModel": "levelModel"
+    "./models/levelModel": "levelModel",
+    "./staticData/boosters": "boosters"
   } ],
   yardModel: [ function(require, module, exports) {
     "use strict";
@@ -7294,6 +8343,7 @@ window.__require = function e(t, n, r) {
     };
     var items = {
       bed: {
+        name: "Bed",
         type: n,
         size: {
           x: 1,
@@ -7301,6 +8351,7 @@ window.__require = function e(t, n, r) {
         }
       },
       cushionBlue: {
+        name: "Blue Cushion",
         type: n,
         size: {
           x: 1,
@@ -7308,6 +8359,7 @@ window.__require = function e(t, n, r) {
         }
       },
       cushionRed: {
+        name: "Red Cushion",
         type: n,
         size: {
           x: 1,
@@ -7315,6 +8367,7 @@ window.__require = function e(t, n, r) {
         }
       },
       cushionOrange: {
+        name: "Orange Cushion",
         type: n,
         size: {
           x: 1,
@@ -7322,6 +8375,7 @@ window.__require = function e(t, n, r) {
         }
       },
       cushionPink: {
+        name: "Pink Cushion",
         type: n,
         size: {
           x: 1,
@@ -7329,6 +8383,7 @@ window.__require = function e(t, n, r) {
         }
       },
       featherToy: {
+        name: "Feather Toy",
         type: n,
         size: {
           x: 1,
@@ -7340,6 +8395,7 @@ window.__require = function e(t, n, r) {
         }
       },
       hamburgerCushion1: {
+        name: "Hamburger Cushion 1",
         type: n,
         size: {
           x: 1,
@@ -7347,6 +8403,7 @@ window.__require = function e(t, n, r) {
         }
       },
       hamburgerCushion2: {
+        name: "Hamburger Cushion 2",
         type: n,
         size: {
           x: 1,
@@ -7354,6 +8411,7 @@ window.__require = function e(t, n, r) {
         }
       },
       hamburgerCushion3: {
+        name: "Hamburger Cushion 3",
         type: n,
         size: {
           x: 1,
@@ -7361,6 +8419,7 @@ window.__require = function e(t, n, r) {
         }
       },
       paperBag1: {
+        name: "Paper Bag 1",
         type: n,
         size: {
           x: 1,
@@ -7368,6 +8427,7 @@ window.__require = function e(t, n, r) {
         }
       },
       paperBag2: {
+        name: "Paper Bag 2",
         type: n,
         size: {
           x: 1,
@@ -7375,6 +8435,7 @@ window.__require = function e(t, n, r) {
         }
       },
       plushDoll: {
+        name: "Plush Doll",
         type: n,
         size: {
           x: 1,
@@ -7382,6 +8443,7 @@ window.__require = function e(t, n, r) {
         }
       },
       pot: {
+        name: "Pot",
         type: n,
         size: {
           x: 1,
@@ -7389,6 +8451,7 @@ window.__require = function e(t, n, r) {
         }
       },
       rubberBallRainbow: {
+        name: "Rainbow Ball",
         type: n,
         size: {
           x: 1,
@@ -7396,6 +8459,7 @@ window.__require = function e(t, n, r) {
         }
       },
       rubberBallRed: {
+        name: "Red Ball",
         type: n,
         size: {
           x: 1,
@@ -7403,6 +8467,7 @@ window.__require = function e(t, n, r) {
         }
       },
       stretchingBoard: {
+        name: "Stretching Board",
         type: n,
         size: {
           x: 2,
@@ -7410,6 +8475,7 @@ window.__require = function e(t, n, r) {
         }
       },
       swimRing: {
+        name: "Swim Ring",
         type: w,
         size: {
           x: 1,
@@ -7417,6 +8483,7 @@ window.__require = function e(t, n, r) {
         }
       },
       swing: {
+        name: "Swing",
         type: t,
         size: {
           x: 1,
@@ -7428,6 +8495,7 @@ window.__require = function e(t, n, r) {
         }
       },
       tent: {
+        name: "Tent",
         type: n,
         size: {
           x: 2,
@@ -7443,6 +8511,7 @@ window.__require = function e(t, n, r) {
         }
       },
       tower: {
+        name: "Tower",
         type: n,
         size: {
           x: 2,
@@ -7454,6 +8523,7 @@ window.__require = function e(t, n, r) {
         }
       },
       tunnel: {
+        name: "Tunnel",
         type: n,
         size: {
           x: 3,
@@ -7471,4 +8541,4 @@ window.__require = function e(t, n, r) {
     module.exports = exports["default"];
     cc._RF.pop();
   }, {} ]
-}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "SubsceneController", "TopUI", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "levels", "shop", "yard", "userState" ]);
+}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "CatView", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "StartSelectionItem", "StartSelectionPopup", "SubsceneController", "TopUI", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "boosters", "cats", "levels", "shop", "yard", "userState" ]);
