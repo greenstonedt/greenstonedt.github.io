@@ -416,8 +416,8 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "813cbcI64NCwrG5dM76T4yo", "BagSubscene");
     "use strict";
-    var _yard = _interopRequireDefault(require("../../staticData/yard"));
     var _userState = _interopRequireDefault(require("../../userState"));
+    var _yard = _interopRequireDefault(require("../../staticData/yard"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
@@ -438,7 +438,7 @@ window.__require = function e(t, n, r) {
     var SUPPLY_ITEM_HEIGHT = 500;
     var BOTTOM_SPACE = 162;
     var LIST_SPACING = 50;
-    var HIGHLIGHT_SPEED = .7;
+    var GLOWING_SPEED = .7;
     cc.Class({
       extends: cc.Component,
       properties: {
@@ -450,7 +450,11 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.Prefab
         },
-        material_highlight: {
+        GlowItem: {
+          default: null,
+          type: cc.Prefab
+        },
+        material_glow: {
           default: null,
           type: cc.Material
         }
@@ -475,6 +479,8 @@ window.__require = function e(t, n, r) {
         this.boostersScrollFrame = this.boostersScrollView.getChildByName("view").getChildByName("content");
         this.suppliesScrollView = this.node.getChildByName("suppliesScrollview");
         this.suppliesScrollFrame = this.suppliesScrollView.getChildByName("view").getChildByName("content");
+        this.glowLayer = this.suppliesScrollFrame.getChildByName("GlowLayer");
+        this.glowLayer.zIndex = 2;
         this.topBg.zIndex = -2;
         this.boostersTab.on("click", this.onBoostersTabClicked, this);
         this.suppliesTab.on("click", this.onSuppliesTabClicked, this);
@@ -483,8 +489,9 @@ window.__require = function e(t, n, r) {
         this.app.suppliesRefreshRequest = true;
         this.boosterItems = {};
         this.supplyItems = {};
+        this.glowItems = {};
         this.selectingSuppliesCount = 0;
-        this.highlightTimer = 0;
+        this.glowTimer = 0;
       },
       onEnable: function onEnable() {
         if (this.app.boostersRefreshRequest) {
@@ -495,15 +502,15 @@ window.__require = function e(t, n, r) {
           this.loadSupplyItems();
           this.app.suppliesRefreshRequest = false;
         }
-        this.clearHighlightSupplies();
+        this.clearGlowingSupplies();
       },
       onOpened: function onOpened(opts) {
         opts && opts.tab && this.selectTab(opts.tab);
       },
       update: function update(dt) {
         if (this.selectingSuppliesCount) {
-          this.highlightTimer += dt * HIGHLIGHT_SPEED;
-          this.material_highlight.setProperty("hl_timer", this.highlightTimer);
+          this.glowTimer += dt * GLOWING_SPEED;
+          this.material_glow.setProperty("hl_timer", this.glowTimer);
         }
       },
       loadBoosterItems: function loadBoosterItems() {
@@ -531,28 +538,41 @@ window.__require = function e(t, n, r) {
         this.boostersScrollFrame.height = BOOSTER_ITEM_HEIGHT * Math.ceil(.5 * boosterCounter) + 2 * LIST_SPACING;
       },
       loadSupplyItems: function loadSupplyItems() {
-        var _this = this;
         for (var key in this.supplyItems) {
           var supplyItem = this.supplyItems[key];
           supplyItem.node.destroy();
         }
+        for (var _key2 in this.glowItems) {
+          var glowItem = this.glowItems[_key2];
+          glowItem.node.destroy();
+        }
         this.supplyItems = {};
-        var suppliesData = _userState["default"].getSupplies();
+        this.glowItems = {};
+        var supplies = _userState["default"].getSupplies();
         var yardData = _userState["default"].getYard();
         var supplyCounter = 0;
-        suppliesData.forEach(function(item) {
-          var goItem = cc.instantiate(_this.SupplyItem).getComponent("BagSupplyItem");
-          goItem.node.setParent(_this.suppliesScrollFrame);
+        for (var _key3 in _yard["default"].items) {
+          var goItem = cc.instantiate(this.SupplyItem).getComponent("BagSupplyItem");
+          goItem.node.setParent(this.suppliesScrollFrame);
           goItem.node.x = supplyCounter % 2 ? .5 * ITEM_WIDTH : .5 * -ITEM_WIDTH;
           goItem.node.y = -LIST_SPACING - Math.floor(.5 * supplyCounter) * SUPPLY_ITEM_HEIGHT;
-          goItem.loadData({
-            id: item,
-            isPlaced: !!yardData[item]
-          }, _this.onSupplyItemClicked.bind(_this));
-          goItem.materialHighlight = _this.material_highlight;
-          _this.supplyItems[item] = goItem;
+          supplies.includes(_key3) ? goItem.loadData({
+            id: _key3,
+            isPlaced: !!yardData[_key3]
+          }, this.onSupplyItemClicked.bind(this)) : goItem.loadData(null, null);
+          this.supplyItems[_key3] = goItem;
           supplyCounter++;
-        });
+          if (goItem.data) {
+            var glowGOItem = cc.instantiate(this.GlowItem).getComponent("YardGlow");
+            glowGOItem.node.setParent(this.glowLayer);
+            glowGOItem.node.x = goItem.node.x + goItem.icon.node.x;
+            glowGOItem.node.y = goItem.node.y + goItem.icon.node.y + goItem.icon.node.height * goItem.icon.node.scale * .5;
+            glowGOItem.node.scale = goItem.node.scale * goItem.icon.node.scale;
+            this.glowItems[_key3] = glowGOItem;
+            glowGOItem.setGlowShape(goItem.data.id);
+            glowGOItem.node.active = false;
+          }
+        }
         this.suppliesScrollFrame.height = SUPPLY_ITEM_HEIGHT * Math.ceil(.5 * supplyCounter) + 2 * LIST_SPACING + this.bottomFrame.height * this.bottomFrame.scale;
       },
       selectTab: function selectTab(tab) {
@@ -578,17 +598,17 @@ window.__require = function e(t, n, r) {
           this.boostersScrollView.active = false;
           this.suppliesScrollView.active = true;
           this.bottomFrame.active = true;
-          this.clearHighlightSupplies();
+          this.clearGlowingSupplies();
         }
       },
-      clearHighlightSupplies: function clearHighlightSupplies() {
+      clearGlowingSupplies: function clearGlowingSupplies() {
         this.bottomFramePlace.active = false;
         this.bottomFrameEmpty.active = true;
         this.selectingSuppliesCount = 0;
-        this.highlightTimer = 0;
-        for (var key in this.supplyItems) {
-          var supplyItem = this.supplyItems[key];
-          supplyItem.unHighlight;
+        this.glowTimer = 0;
+        for (var key in this.glowItems) {
+          var glowItem = this.glowItems[key];
+          glowItem.node.active = false;
         }
       },
       onBoostersTabClicked: function onBoostersTabClicked() {
@@ -604,32 +624,34 @@ window.__require = function e(t, n, r) {
       },
       onSupplyItemClicked: function onSupplyItemClicked(id) {
         if (this.supplyItems[id].isPlaced) return;
-        if (this.supplyItems[id].isHighlight) {
-          this.supplyItems[id].unHighlight();
+        if (this.glowItems[id].node.active) {
+          this.glowItems[id].node.active = false;
           this.selectingSuppliesCount--;
         } else {
-          this.supplyItems[id].highlight();
+          this.glowItems[id].node.active = true;
           this.selectingSuppliesCount++;
-          this.highlightTimer = 0;
+          this.glowTimer = 0;
         }
         this.bottomFramePlace.active = this.selectingSuppliesCount > 0;
         this.bottomFrameEmpty.active = 0 === this.selectingSuppliesCount;
       },
       onPlaceButtonClicked: function onPlaceButtonClicked() {
         var yardData = _userState["default"].getYard();
-        for (var key in this.supplyItems) {
+        for (var key in this.glowItems) {
+          var glowItem = this.glowItems[key];
           var supplyItem = this.supplyItems[key];
-          if (supplyItem.isHighlight) {
+          if (glowItem.node.active) {
             yardData[key] || (yardData[key] = {
               x: -1,
               y: -1
             });
             supplyItem.setPlaced();
+            glowItem.node.active = false;
           }
         }
         _userState["default"].saveYard(yardData);
         this.app.yardViewRefreshRequest = true;
-        this.clearHighlightSupplies();
+        this.clearGlowingSupplies();
       },
       updateScreenSize: function updateScreenSize(frame, uiScale) {
         this.wallpaper.height = this.node.height;
@@ -656,7 +678,7 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "73969qcc6xIXYVDwfzZPHIG", "BagSupplyItem");
     "use strict";
-    var MAX_ICON_SIZE = 380;
+    var MAX_ICON_SIZE = 400;
     cc.Class({
       extends: cc.Component,
       properties: {
@@ -680,15 +702,7 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.SpriteFrame
         },
-        hamburgerCushion1: {
-          default: null,
-          type: cc.SpriteFrame
-        },
-        hamburgerCushion2: {
-          default: null,
-          type: cc.SpriteFrame
-        },
-        hamburgerCushion3: {
+        hamburgerCushion: {
           default: null,
           type: cc.SpriteFrame
         },
@@ -748,14 +762,19 @@ window.__require = function e(t, n, r) {
         this.node.on("click", this.onClicked, this);
       },
       loadData: function loadData(data, onItemClicked) {
-        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
-        this.placedIcon = this.node.getChildByName("placed-icon");
-        var maxSize = Math.max(this.icon.node.width, this.icon.node.height, MAX_ICON_SIZE);
-        this.icon.node.scale = MAX_ICON_SIZE / maxSize;
         this.data = data;
-        this.onItemClicked = onItemClicked;
-        this.icon.spriteFrame = this[data.id];
-        data.isPlaced && this.setPlaced();
+        this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
+        if (data) {
+          var maxSize = Math.max(this.icon.node.width, this.icon.node.height, MAX_ICON_SIZE);
+          this.icon.node.scale = MAX_ICON_SIZE / maxSize;
+          this.onItemClicked = onItemClicked;
+          this.icon.spriteFrame = this[data.id];
+          data.isPlaced && this.setPlaced();
+        } else {
+          this.placedIcon = this.node.getChildByName("placed-icon");
+          this.icon.node.active = false;
+          this.placedIcon.active = false;
+        }
       },
       setPlaced: function setPlaced() {
         this.isPlaced = true;
@@ -763,15 +782,6 @@ window.__require = function e(t, n, r) {
         this.placedIcon = this.node.getChildByName("placed-icon");
         this.icon.node.active = false;
         this.placedIcon.active = true;
-      },
-      highlight: function highlight() {
-        this.isHighlight = true;
-        this.highlightTimer = 0;
-        this.icon.setMaterial(0, this.materialHighlight);
-      },
-      unHighlight: function unHighlight() {
-        this.isHighlight = false;
-        this.icon.setMaterial(0, this.materialNormal);
       },
       onClicked: function onClicked() {
         this.onItemClicked && this.onItemClicked(this.data.id);
@@ -4828,15 +4838,7 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.SpriteFrame
         },
-        hamburgerCushion1: {
-          default: null,
-          type: cc.SpriteFrame
-        },
-        hamburgerCushion2: {
-          default: null,
-          type: cc.SpriteFrame
-        },
-        hamburgerCushion3: {
+        hamburgerCushion: {
           default: null,
           type: cc.SpriteFrame
         },
@@ -4910,6 +4912,8 @@ window.__require = function e(t, n, r) {
         this.nextAction = EMPTY_METHOD;
         this.animating = false;
         this.isShowing = true;
+        this.isThumpUpAnimating = false;
+        this.thumpUpTimer = 0;
         this.uiScale = 1;
         this.unlockItemFrame.active = false;
         this.hide();
@@ -4923,6 +4927,10 @@ window.__require = function e(t, n, r) {
           lightstar2.angle += 20 * dt;
           lightstar1.scale = .9 + .05 * Math.sin(this.app.now / 1e3 * 4);
           lightstar2.scale = .9 + .1 * Math.cos((this.app.now + 1e3) / 1e3 * 5);
+        }
+        if (this.isThumpUpAnimating) {
+          this.thumpUpTimer -= dt;
+          this.cat.getCurrent(0).isComplete() && (this.thumpUpTimer < 0 ? this.setCatThumpUpAnimation() : this.cat.addAnimation(0, "Cat_idle", false));
         }
       },
       init: function init(options) {
@@ -5004,7 +5012,7 @@ window.__require = function e(t, n, r) {
         this.result = result;
         this.levelData = data;
         this.cat.setSkin(result ? "whietcat" : "orangecat");
-        this.cat.setAnimation(0, result ? "Cat_thumb" : "Cat_cry", true);
+        this.cat.setAnimation(0, result ? "Cat_idle" : "Cat_cry", true);
         this.cat.getCurrent(0).timeScale = 0;
         return new Promise(function(resolve) {
           _this2.isShowing = true;
@@ -5083,6 +5091,10 @@ window.__require = function e(t, n, r) {
             easing: "cubicOut"
           }).call(function() {
             _this2.cat.getCurrent(0).timeScale = 1;
+            if (result) {
+              _this2.isThumpUpAnimating = true;
+              _this2.setCatThumpUpAnimation();
+            }
           }).start();
           result && _this2.confetti.children.forEach(function(paper) {
             var time = .8 + .4 * Math.random();
@@ -5336,6 +5348,10 @@ window.__require = function e(t, n, r) {
       setNextButtonState: function setNextButtonState(enabled) {
         this.nextButton.node.active = enabled;
         this.homeButton.node.x = enabled ? this.homeButton.node.x : 0;
+      },
+      setCatThumpUpAnimation: function setCatThumpUpAnimation() {
+        this.cat.addAnimation(0, "Cat_thumb", false);
+        this.thumpUpTimer = this.cat.getCurrent(0).animation.duration + 1 + Math.random();
       },
       onTryAgainClicked: function onTryAgainClicked() {
         var _this5 = this;
@@ -6631,9 +6647,9 @@ window.__require = function e(t, n, r) {
   }, {
     "../userState": "userState"
   } ],
-  YardItem: [ function(require, module, exports) {
+  YardGlow: [ function(require, module, exports) {
     "use strict";
-    cc._RF.push(module, "4d5b0vf9HpKDoge/BCGmito", "YardItem");
+    cc._RF.push(module, "0eb78QXX3hOEI8byyLLimCa", "YardGlow");
     "use strict";
     var HIGHLIGHT_SPEED = .7;
     cc.Class({
@@ -6659,15 +6675,7 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.SpriteFrame
         },
-        hamburgerCushion1: {
-          default: null,
-          type: cc.SpriteFrame
-        },
-        hamburgerCushion2: {
-          default: null,
-          type: cc.SpriteFrame
-        },
-        hamburgerCushion3: {
+        hamburgerCushion: {
           default: null,
           type: cc.SpriteFrame
         },
@@ -6718,14 +6726,94 @@ window.__require = function e(t, n, r) {
         tunnel: {
           default: null,
           type: cc.SpriteFrame
-        },
-        material_normal: {
+        }
+      },
+      setGlowShape: function setGlowShape(id) {
+        this.image = this.node.getChildByName("image").getComponent(cc.Sprite);
+        this.image.spriteFrame = this[id];
+      }
+    });
+    cc._RF.pop();
+  }, {} ],
+  YardItem: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "4d5b0vf9HpKDoge/BCGmito", "YardItem");
+    "use strict";
+    var HIGHLIGHT_SPEED = .7;
+    cc.Class({
+      extends: cc.Component,
+      properties: {
+        bed: {
           default: null,
-          type: cc.Material
+          type: cc.SpriteFrame
         },
-        material_highlight: {
+        cushionBlue: {
           default: null,
-          type: cc.Material
+          type: cc.SpriteFrame
+        },
+        cushionOrange: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cushionPink: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        featherToy: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        hamburgerCushion: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        paperBag2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        plushDoll: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        pot: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRainbow: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        rubberBallRed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        stretchingBoard: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swimRing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        swing: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tent: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tower: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        tunnel: {
+          default: null,
+          type: cc.SpriteFrame
         }
       },
       onLoad: function onLoad() {
@@ -6735,8 +6823,6 @@ window.__require = function e(t, n, r) {
         this.button.node.on("click", this.onDeleteClicked, this);
         this.x = -1;
         this.y = -1;
-        this.isHighlight = true;
-        this.highlightTimer = 0;
       },
       setConfig: function setConfig(config) {
         this.config = config;
@@ -6765,21 +6851,6 @@ window.__require = function e(t, n, r) {
       showDeleteButton: function showDeleteButton() {
         this.button = this.node.getChildByName("closeButton").getComponent(cc.Button);
         this.button.node.active = true;
-      },
-      highlight: function highlight() {
-        this.isHighlight = true;
-        this.highlightTimer = 0;
-        this.image.setMaterial(0, this.material_highlight);
-      },
-      unHighlight: function unHighlight() {
-        this.isHighlight = false;
-        this.image.setMaterial(0, this.material_normal);
-      },
-      update: function update(dt) {
-        if (this.isHighlight) {
-          this.highlightTimer += dt * HIGHLIGHT_SPEED;
-          this.material_highlight.setProperty("hl_timer", this.highlightTimer);
-        }
       },
       onTouchStart: function onTouchStart(e) {
         var location = e.getLocation();
@@ -6825,6 +6896,7 @@ window.__require = function e(t, n, r) {
     var SCROLL_SPPED_WITH_ITEM = .3;
     var INITIAL_X = -690;
     var ANIMATION_DURATION = .4;
+    var GLOWING_SPEED = .7;
     var WIREFRAME_CELL_SIZE = 200;
     var WIREFRAME_Y_OFFSET = 800;
     cc.Class({
@@ -6837,6 +6909,10 @@ window.__require = function e(t, n, r) {
         YardItem: {
           default: null,
           type: cc.Prefab
+        },
+        material_glow: {
+          default: null,
+          type: cc.Material
         }
       },
       onLoad: function onLoad() {
@@ -6850,6 +6926,7 @@ window.__require = function e(t, n, r) {
         this._prevTouchX = 0;
         this._screenX = 0;
         this._viewPos = {};
+        this.glowTimer = 0;
         this.pressingTime = 0;
         this.isPressing = false;
         this.editMode = false;
@@ -6857,6 +6934,7 @@ window.__require = function e(t, n, r) {
         this.isDragging = false;
         this.draggingOffset = null;
         this.scrollView = this.node.getChildByName("scrollView");
+        this.yardItemGlow = this.scrollView.getChildByName("YardGlow").getComponent("YardGlow");
         this.wireframe = this.scrollView.getChildByName("wireframe");
         this.wireframe.x = .5 * -this.scrollView.width;
         this.wireframe.y = .5 * this.scrollView.height - WIREFRAME_Y_OFFSET;
@@ -6864,6 +6942,8 @@ window.__require = function e(t, n, r) {
         this.wireframe.active = false;
         this.scrollView.x = INITIAL_X;
         this._destX = INITIAL_X;
+        this.yardItemGlow.node.zIndex = _yard["default"].patternSize.x * _yard["default"].patternSize.y;
+        this.yardItemGlow.node.active = false;
       },
       onEnable: function onEnable() {
         if (this.app.yardViewRefreshRequest) {
@@ -6891,6 +6971,14 @@ window.__require = function e(t, n, r) {
         if (this.editMode && this.isDragging && this.selectingItem) {
           var touchCoord = this.convertToWireframeCoord(this._viewPos, this.draggingOffset);
           this.isCoordValid(touchCoord, this.selectingItem.config, this.selectingItem) && this.placeItem(this.selectingItem, touchCoord);
+        }
+        if (this.editMode && this.yardItemGlow.node.active && this.selectingItem) {
+          this.yardItemGlow.node.x = this.selectingItem.node.x;
+          this.yardItemGlow.node.y = this.selectingItem.node.y;
+        }
+        if (this.yardItemGlow.node.active) {
+          this.glowTimer += dt * GLOWING_SPEED;
+          this.material_glow.setProperty("hl_timer", this.glowTimer);
         }
       },
       loadWireframe: function loadWireframe() {
@@ -6988,13 +7076,17 @@ window.__require = function e(t, n, r) {
           var yardItem = this.yardItems[key];
           yardItem.showDeleteButton();
         }
-        this.selectingItem && this.selectingItem.highlight();
+        if (this.selectingItem) {
+          this.yardItemGlow.node.active = true;
+          this.glowTimer = 0;
+        }
       },
       exitEditMode: function exitEditMode(animate) {
         var _this = this;
         void 0 === animate && (animate = false);
         this.editMode = false;
         this.selectingItem = null;
+        this.yardItemGlow.node.active = false;
         animate ? cc.tween(this.wireframe).to(ANIMATION_DURATION, {
           opacity: 0
         }, {
@@ -7005,7 +7097,6 @@ window.__require = function e(t, n, r) {
         for (var key in this.yardItems) {
           var yardItem = this.yardItems[key];
           yardItem.hideDeleteButton();
-          yardItem.unHighlight();
         }
       },
       isCoordValid: function isCoordValid(coord, config, target) {
@@ -7071,8 +7162,12 @@ window.__require = function e(t, n, r) {
       },
       selectItem: function selectItem(item, offset) {
         this.selectingItem = item;
+        this.yardItemGlow.setGlowShape(this.selectingItem.config.id);
         this.home.editModeDragNotification(true);
-        this.editMode && this.selectingItem.highlight();
+        if (this.editMode) {
+          this.yardItemGlow.node.active = true;
+          this.glowTimer = 0;
+        }
         this.draggingOffset = offset;
       },
       onItemTouched: function onItemTouched(e, item, offset) {
@@ -7087,14 +7182,7 @@ window.__require = function e(t, n, r) {
         this.pressingTime = 0;
         if (item) {
           this.isDragging = true;
-          if (this.selectingItem) {
-            this.selectingItem.unHighlight();
-            this.selectItem(item, offset);
-          } else this.selectItem(item, offset);
-        } else {
-          this.selectingItem && this.selectingItem.unHighlight();
-          this.home.editModeDragNotification(false);
-          this.selectingItem = null;
+          this.selectItem(item, offset);
         }
       },
       onTouchMove: function onTouchMove(e) {
@@ -7109,15 +7197,21 @@ window.__require = function e(t, n, r) {
         this.isPressing = false;
         this.isDragging = false;
         this.draggingOffset = null;
+        this.home.editModeDragNotification(false);
+        this.selectingItem = null;
+        this.yardItemGlow.node.active = false;
       },
       onTouchCancel: function onTouchCancel(e) {
         this.isPressing = false;
         this.isDragging = false;
         this.draggingOffset = null;
+        this.home.editModeDragNotification(false);
+        this.selectingItem = null;
+        this.yardItemGlow.node.active = false;
       },
       onItemDeleted: function onItemDeleted(item) {
         if (this.selectingItem === item) {
-          this.selectingItem.unHighlight();
+          this.yardItemGlow.node.active = false;
           this.home.editModeDragNotification(false);
           this.selectingItem = null;
         }
@@ -7751,7 +7845,7 @@ window.__require = function e(t, n, r) {
           amount: 36
         } ],
         rewards: {
-          supply: "hamburgerCushion2"
+          supply: "hamburgerCushion"
         },
         turns: 25,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
@@ -8097,6 +8191,7 @@ window.__require = function e(t, n, r) {
     exports["default"] = void 0;
     var _levelModel = _interopRequireDefault(require("./models/levelModel"));
     var _boosters = _interopRequireDefault(require("./staticData/boosters"));
+    var _yard = _interopRequireDefault(require("./staticData/yard"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
@@ -8246,15 +8341,39 @@ window.__require = function e(t, n, r) {
     };
     function getYard() {
       var dataString = localStorage.getItem("userState.yardItems");
-      return dataString ? JSON.parse(dataString) : defaultYardData;
+      var data = {};
+      var willSave = false;
+      if (dataString) data = JSON.parse(dataString); else {
+        willSave = true;
+        data = defaultYardData;
+      }
+      for (var key in data) if (!_yard["default"].items[key]) {
+        willSave = true;
+        delete data[key];
+      }
+      willSave && saveYard(data);
+      return data;
     }
     function saveYard(data) {
       localStorage.setItem("userState.yardItems", JSON.stringify(data));
     }
-    var defaultSuppliesData = [ "tunnel" ];
+    var defaultSuppliesData = [ "tunnel", "tower", "tent", "swing", "swimRing", "stretchingBoard", "rubberBallRed", "rubberBallRainbow", "pot", "plushDoll", "paperBag2", "paperBag1", "hamburgerCushion", "featherToy", "cushionPink", "cushionOrange", "cushionBlue", "bed" ];
     function getSupplies() {
       var dataString = localStorage.getItem("userState.supplies");
-      return dataString ? JSON.parse(dataString) : defaultSuppliesData;
+      var data = [];
+      var willSave = false;
+      if (dataString) data = JSON.parse(dataString); else {
+        willSave = true;
+        data = defaultSuppliesData;
+      }
+      data.forEach(function(item, i) {
+        if (!_yard["default"].items[item]) {
+          willSave = true;
+          data.splice(i, 1);
+        }
+      });
+      willSave && saveSupplies(data);
+      return data;
     }
     function addSupply(item) {
       var supplies = getSupplies();
@@ -8296,7 +8415,8 @@ window.__require = function e(t, n, r) {
     cc._RF.pop();
   }, {
     "./models/levelModel": "levelModel",
-    "./staticData/boosters": "boosters"
+    "./staticData/boosters": "boosters",
+    "./staticData/yard": "yard"
   } ],
   yardModel: [ function(require, module, exports) {
     "use strict";
@@ -8348,6 +8468,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        buttonOffset: {
+          x: -20,
+          y: -10
         }
       },
       cushionBlue: {
@@ -8356,14 +8480,14 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
-        }
-      },
-      cushionRed: {
-        name: "Red Cushion",
-        type: n,
-        size: {
-          x: 1,
-          y: 1
+        },
+        offset: {
+          x: 0,
+          y: -40
+        },
+        buttonOffset: {
+          x: -20,
+          y: -10
         }
       },
       cushionOrange: {
@@ -8372,6 +8496,14 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        offset: {
+          x: 0,
+          y: -40
+        },
+        buttonOffset: {
+          x: -20,
+          y: -10
         }
       },
       cushionPink: {
@@ -8380,6 +8512,14 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        offset: {
+          x: 0,
+          y: -40
+        },
+        buttonOffset: {
+          x: -20,
+          y: -10
         }
       },
       featherToy: {
@@ -8390,32 +8530,24 @@ window.__require = function e(t, n, r) {
           y: 1
         },
         offset: {
-          x: 0,
+          x: -20,
           y: 100
+        },
+        buttonOffset: {
+          x: -20,
+          y: -10
         }
       },
-      hamburgerCushion1: {
-        name: "Hamburger Cushion 1",
+      hamburgerCushion: {
+        name: "Hamburger Cushion",
         type: n,
         size: {
           x: 1,
           y: 1
-        }
-      },
-      hamburgerCushion2: {
-        name: "Hamburger Cushion 2",
-        type: n,
-        size: {
-          x: 1,
-          y: 1
-        }
-      },
-      hamburgerCushion3: {
-        name: "Hamburger Cushion 3",
-        type: n,
-        size: {
-          x: 1,
-          y: 1
+        },
+        buttonOffset: {
+          x: -25,
+          y: -25
         }
       },
       paperBag1: {
@@ -8424,6 +8556,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        buttonOffset: {
+          x: -25,
+          y: -25
         }
       },
       paperBag2: {
@@ -8432,6 +8568,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        buttonOffset: {
+          x: -25,
+          y: -25
         }
       },
       plushDoll: {
@@ -8440,6 +8580,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        offset: {
+          x: 0,
+          y: -40
         }
       },
       pot: {
@@ -8448,6 +8592,14 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        offset: {
+          x: 0,
+          y: 25
+        },
+        buttonOffset: {
+          x: -30,
+          y: -50
         }
       },
       rubberBallRainbow: {
@@ -8456,6 +8608,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        buttonOffset: {
+          x: -20,
+          y: -20
         }
       },
       rubberBallRed: {
@@ -8464,6 +8620,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        offset: {
+          x: 0,
+          y: -40
         }
       },
       stretchingBoard: {
@@ -8472,6 +8632,14 @@ window.__require = function e(t, n, r) {
         size: {
           x: 2,
           y: 1
+        },
+        offset: {
+          x: 0,
+          y: -20
+        },
+        buttonOffset: {
+          x: -25,
+          y: -25
         }
       },
       swimRing: {
@@ -8480,6 +8648,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 1,
           y: 1
+        },
+        buttonOffset: {
+          x: -35,
+          y: -35
         }
       },
       swing: {
@@ -8492,6 +8664,10 @@ window.__require = function e(t, n, r) {
         offset: {
           x: 0,
           y: 247
+        },
+        buttonOffset: {
+          x: -20,
+          y: -235
         }
       },
       tent: {
@@ -8503,11 +8679,11 @@ window.__require = function e(t, n, r) {
         },
         offset: {
           x: 0,
-          y: 100
+          y: 120
         },
         buttonOffset: {
-          x: -80,
-          y: -140
+          x: -100,
+          y: -160
         }
       },
       tower: {
@@ -8520,6 +8696,10 @@ window.__require = function e(t, n, r) {
         offset: {
           x: 0,
           y: 112
+        },
+        buttonOffset: {
+          x: -45,
+          y: -45
         }
       },
       tunnel: {
@@ -8528,6 +8708,10 @@ window.__require = function e(t, n, r) {
         size: {
           x: 3,
           y: 1
+        },
+        buttonOffset: {
+          x: -30,
+          y: -15
         }
       }
     };
@@ -8541,4 +8725,4 @@ window.__require = function e(t, n, r) {
     module.exports = exports["default"];
     cc._RF.pop();
   }, {} ]
-}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "CatView", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "StartSelectionItem", "StartSelectionPopup", "SubsceneController", "TopUI", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "boosters", "cats", "levels", "shop", "yard", "userState" ]);
+}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "CatView", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "StartSelectionItem", "StartSelectionPopup", "SubsceneController", "TopUI", "YardGlow", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "boosters", "cats", "levels", "shop", "yard", "userState" ]);
