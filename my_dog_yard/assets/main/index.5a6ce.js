@@ -813,8 +813,35 @@ window.__require = function e(t, n, r) {
         }
       },
       init: function init() {
-        this.cancelBoosterButton = this.node.getChildByName("cancelBoosterButton");
-        this.cancelBoosterButton.active = false;
+        this.app = cc.find("app").getComponent("app");
+        this.container = this.node.getChildByName("container");
+        this.overlay = this.container.getChildByName("overlay");
+        this.contentFrame = this.overlay.getChildByName("content");
+        this.boostersFrame = this.contentFrame.getChildByName("boosters");
+        var fx = this.contentFrame.getChildByName("effect");
+        this.lightstar = fx.getChildByName("lightstar");
+        this.starFx1 = fx.getChildByName("star1").getComponent(cc.ParticleSystem);
+        this.starFx2 = fx.getChildByName("star2").getComponent(cc.ParticleSystem);
+        this.overlay.zIndex = 1;
+        this.overlay.active = false;
+        this.isActive = false;
+        this.selectingType = null;
+        this.lockedUserInteraction = false;
+        this.animating = false;
+        this.starFx1.node.active = false;
+        this.starFx2.node.active = false;
+        this.selectedSubcolor = "basic1";
+        this.paintbrushFrame = this.boostersFrame.getChildByName("paintbrush");
+        this.paintbrushFrame.getChildByName("basic1").on("click", this.onColorSelelected, this);
+        this.paintbrushFrame.getChildByName("basic2").on("click", this.onColorSelelected, this);
+        this.paintbrushFrame.getChildByName("basic3").on("click", this.onColorSelelected, this);
+        this.paintbrushFrame.getChildByName("basic4").on("click", this.onColorSelelected, this);
+        this.paintbrushFrame.getChildByName("basic5").on("click", this.onColorSelelected, this);
+        this.selectedColorCursor = this.paintbrushFrame.getChildByName("selected");
+        this.selectedColorCursor.position = this.paintbrushFrame.getChildByName(this.selectedSubcolor).position;
+      },
+      getPaintbrushTargetType: function getPaintbrushTargetType() {
+        return this.selectedSubcolor;
       },
       loadBoosters: function loadBoosters(gameBoard, confirmationPopup) {
         this.gameBoard = gameBoard;
@@ -823,7 +850,6 @@ window.__require = function e(t, n, r) {
         this.items = {};
         this.lockedUserInteraction = false;
         this.container = this.node.getChildByName("container");
-        this.cancelBoosterButton.active = false;
         var firstPositionX = ITEM_FIRST_POSITION[0] - (_userState["default"].getSelectedBoosterCount() - 1) * (ITEM_SPACING + ITEM_SIZE) * .5;
         var i = 0;
         for (var type in _boosters["default"]) if (this.data[type] && this.data[type].selected) {
@@ -842,17 +868,29 @@ window.__require = function e(t, n, r) {
           i++;
         }
       },
+      update: function update(dt) {
+        if (this.lightstar && this.app) {
+          this.lightstar.angle += 20 * dt;
+          this.lightstar.scale = .9 + .05 * Math.sin(this.app.now / 1e3 * 4);
+        }
+      },
       onItemClicked: function onItemClicked(type) {
-        var _this = this;
+        if (this.animating) return;
         if (this.lockedUserInteraction) return;
+        if (this.isActive) {
+          this.cancelBoosterMode();
+          return;
+        }
         if (!this.gameBoard.isIdle) return;
         if (0 === this.data[type].amount) return;
-        "wheel" === type ? this.confirmationPopup.show("Do you want to use Wheel?", function() {
-          _this.enterBoosterMode(type);
-        }, true) : this.enterBoosterMode(type);
+        this.enterBoosterMode(type);
       },
       onCancelButtonClicked: function onCancelButtonClicked() {
         this.cancelBoosterMode();
+      },
+      onColorSelelected: function onColorSelelected(e) {
+        this.selectedSubcolor = e.node.name;
+        this.selectedColorCursor.position = this.paintbrushFrame.getChildByName(this.selectedSubcolor).position;
       },
       lockUserInteraction: function lockUserInteraction() {
         this.lockedUserInteraction = true;
@@ -862,14 +900,53 @@ window.__require = function e(t, n, r) {
         this.lockedUserInteraction = false;
       },
       enterBoosterMode: function enterBoosterMode(type) {
-        this.cancelBoosterButton.active = true;
-        this.container.active = false;
+        var _this = this;
+        this.isActive = true;
+        this.selectingType = type;
         this.gameBoard.enterBoosterMode(type);
+        this.items[type].node.zIndex = 2;
+        this.items[type].setSelected(true);
+        this.boostersFrame.children.forEach(function(boosterFrame) {
+          boosterFrame.active = boosterFrame.name === type;
+        });
+        this.starFx1.resetSystem();
+        this.starFx2.resetSystem();
+        this.animating = true;
+        this.overlay.active = true;
+        this.overlay.opacity = 0;
+        cc.tween(this.overlay).to(.3, {
+          opacity: 255
+        }, {
+          easing: "quadOut"
+        }).call(function() {
+          _this.starFx1.resetSystem();
+          _this.starFx2.resetSystem();
+          _this.starFx1.node.active = true;
+          _this.starFx2.node.active = true;
+          _this.animating = false;
+        }).start();
       },
-      exitBoosterMode: function exitBoosterMode(activated, type) {
-        activated && this.reduceType(type);
-        this.cancelBoosterButton.active = false;
-        this.container.active = true;
+      exitBoosterMode: function exitBoosterMode(isBoosterActivated, type) {
+        var _this2 = this;
+        this.isActive = false;
+        this.selectingType && (this.items[this.selectingType].node.zIndex = 0);
+        this.selectingType && this.items[this.selectingType].setSelected(false);
+        this.selectingType = null;
+        this.overlay.active = false;
+        isBoosterActivated && this.reduceType(type);
+        this.starFx1.node.active = false;
+        this.starFx2.node.active = false;
+        this.animating = true;
+        this.overlay.active = true;
+        this.overlay.opacity = 255;
+        cc.tween(this.overlay).to(.3, {
+          opacity: 0
+        }, {
+          easing: "quadOut"
+        }).call(function() {
+          _this2.overlay.active = false;
+          _this2.animating = false;
+        }).start();
       },
       cancelBoosterMode: function cancelBoosterMode() {
         this.exitBoosterMode(false);
@@ -919,10 +996,14 @@ window.__require = function e(t, n, r) {
         }
       },
       onLoad: function onLoad() {
+        this.frame = this.node.getChildByName("frame");
+        this.frameSelected = this.node.getChildByName("frame_selected");
         this.icon = this.node.getChildByName("icon").getComponent(cc.Sprite);
         this.numberLabel = this.node.getChildByName("number").getComponent(cc.Label);
         this.redPoint = this.node.getChildByName("redpoint");
         this.lockIcon = this.node.getChildByName("lockIcon");
+        this.frameSelected.active = false;
+        this.node.on("click", this.onClicked, this);
       },
       loadBooster: function loadBooster(data, onItemClicked) {
         void 0 === onItemClicked && (onItemClicked = null);
@@ -940,6 +1021,10 @@ window.__require = function e(t, n, r) {
         this.redPoint.active = false;
         this.numberLabel.node.active = false;
         this.lockIcon.active = true;
+      },
+      setSelected: function setSelected(selected) {
+        this.frame.active = !selected;
+        this.frameSelected.active = selected;
       },
       updateNumber: function updateNumber(number) {
         this.numberLabel.string = 0 | number;
@@ -1404,6 +1489,7 @@ window.__require = function e(t, n, r) {
         var GameTile = options.GameTile;
         var GameItem = options.GameItem;
         var GameItemSpawner = options.GameItemSpawner;
+        var boosterController = options.boosterController;
         var spriteCollection = options.spriteCollection;
         var onGameItemDestroy = options.onGameItemDestroy || EMPTY_METHOD;
         var onIdle = options.onIdle || EMPTY_METHOD;
@@ -1416,6 +1502,7 @@ window.__require = function e(t, n, r) {
         this.view = view;
         this.GameItem = GameItem;
         this.spriteCollection = spriteCollection;
+        this.boosterController = boosterController;
         this.onGameItemDestroy = onGameItemDestroy;
         this.onIdle = onIdle;
         this.onMoveTriggered = onMoveTriggered;
@@ -1449,7 +1536,6 @@ window.__require = function e(t, n, r) {
         this.switchingCount = 0;
         this.isIdle = this.app.now;
         this.booster = null;
-        this.boosterTarget = null;
         this.lockedUserInteractionReasons = {};
         this.lockedUserInteraction = false;
         this.comboReport = {};
@@ -1598,7 +1684,7 @@ window.__require = function e(t, n, r) {
         this.isCascading && this.update_cascade(dt);
         this.movingSprites.length && this.updateMovingSprites(dt);
         this.highlightTimer += dt;
-        (this.dragging.gameItem || this.boosterTarget) && this.spriteCollection.material_highlight.setProperty("hl_timer", this.highlightTimer);
+        this.dragging.gameItem && this.spriteCollection.material_highlight.setProperty("hl_timer", this.highlightTimer);
       };
       _proto.updateMovingSprites = function updateMovingSprites(dt) {
         var itemData;
@@ -2262,7 +2348,6 @@ window.__require = function e(t, n, r) {
           var _gameItem = this.gameItemFromTouchEvent(e);
           if (!_gameItem) return;
           if (!this.isValidForBoosterActivation(_gameItem)) return;
-          if (this.registerBoosterTarget(_gameItem)) return;
           this.exitBoosterMode(this.activateBooster(_gameItem));
         }
         if (this.lockedUserInteraction) return this.resetDrag();
@@ -2297,24 +2382,18 @@ window.__require = function e(t, n, r) {
       };
       _proto.enterBoosterMode = function enterBoosterMode(type) {
         this.booster = type;
-        this.boosterTarget = null;
-        this.triggerNonTargetBooster(type);
       };
       _proto.exitBoosterMode = function exitBoosterMode(boosterActivated) {
         this.onBoosterModeEnd(boosterActivated, this.booster);
-        this.boosterTarget && this.boosterTarget.unHighlight();
         this.booster = null;
-        this.boosterTarget = null;
       };
       _proto.cancelBoosterMode = function cancelBoosterMode() {
-        this.boosterTarget && this.boosterTarget.unHighlight();
         this.booster = null;
-        this.boosterTarget = null;
       };
       _proto.isValidForBoosterActivation = function isValidForBoosterActivation(gameItem) {
         switch (this.booster) {
          case "paintbrush":
-          return gameItem.isBasicType() && (!this.boosterTarget || gameItem.type !== this.boosterTarget.type);
+          return gameItem.isBasicType() && gameItem.type !== this.boosterController.getPaintbrushTargetType();
 
          case "fairystick":
           return gameItem.isBasicType();
@@ -2322,24 +2401,6 @@ window.__require = function e(t, n, r) {
          default:
           return true;
         }
-      };
-      _proto.registerBoosterTarget = function registerBoosterTarget(gameItem) {
-        switch (this.booster) {
-         case "paintbrush":
-          if (this.boosterTarget) return false;
-          this.boosterTarget = gameItem;
-          var material = this.spriteCollection.material_highlight;
-          this.highlightTimer = 0;
-          material.setProperty("hl_timer", this.highlightTimer);
-          this.boosterTarget.highlight(material);
-          return true;
-
-         default:
-          return false;
-        }
-      };
-      _proto.triggerNonTargetBooster = function triggerNonTargetBooster(type) {
-        "wheel" === type && this.exitBoosterMode(this.triggerWheel());
       };
       _proto.activateBooster = function activateBooster(gameItem) {
         if (!this.booster) return false;
@@ -2361,6 +2422,9 @@ window.__require = function e(t, n, r) {
 
          case "fairystick":
           return this.triggerFairystick(gameItem);
+
+         case "wheel":
+          return this.triggerWheel();
 
          case "hammer":
          default:
@@ -2438,7 +2502,9 @@ window.__require = function e(t, n, r) {
       _proto.triggerPaintbrush = function triggerPaintbrush(gameItem) {
         var _this4 = this;
         this.itemsWaitingForDisappear++;
-        this.transformItem(this.boosterTarget, _extends({}, gameItem.options)).then(function() {
+        var transformedOpts = _extends({}, gameItem.options);
+        transformedOpts.type = this.boosterController.getPaintbrushTargetType();
+        this.transformItem(gameItem, transformedOpts).then(function() {
           _this4.itemsWaitingForDisappear--;
           _this4.checkMatchesRequest = true;
         });
@@ -3978,7 +4044,7 @@ window.__require = function e(t, n, r) {
         default: obj
       };
     }
-    var IPAD_RATIO = _constants["default"].IPAD_RATIO;
+    var IPAD_RATIO = _constants["default"].IPAD_RATIO, DEBUG = _constants["default"].DEBUG;
     var _constants$GAMEPLAY = _constants["default"].GAMEPLAY, TILE_SIZE = _constants$GAMEPLAY.TILE_SIZE, ITEM_SIZE = _constants$GAMEPLAY.ITEM_SIZE;
     var TOP_AREA_HEIGHT = 320;
     var BOT_AREA_HEIGHT = 226;
@@ -4022,13 +4088,15 @@ window.__require = function e(t, n, r) {
         this.bottomUI = this.scaleContainer.getChildByName("bottom");
         this.boosterFrame = this.bottomUI.getChildByName("boosterFrame");
         this.boosterController = this.boosterFrame.getComponent("BoosterController");
+        this.boosterOverlay = this.boosterFrame.getChildByName("container").getChildByName("overlay");
+        this.boosterContent = this.boosterOverlay.getChildByName("content");
         var levelLabel = this.topUI.getChildByName("levelLabel").getComponent(cc.Label);
         this.objectiveController = this.topUI.getChildByName("objectiveFrame").getComponent("ObjectiveController");
         this.result = this.scaleContainer.getChildByName("Result").getComponent("ResultController");
         this.confirmation = this.scaleContainer.getChildByName("Confirmation").getComponent("ConfirmationController");
         this.selectionPopup = this.scaleContainer.getChildByName("SelectionPopup").getComponent("StartSelectionPopup");
         this.gameBoard = null;
-        this.levelData = _levelModel["default"].getLevel(_constants["default"].GAME_DESIGN_TEST || currentLevel);
+        this.levelData = _levelModel["default"].getLevel(DEBUG.TEST_LEVEL || currentLevel);
         if (!this.levelData) {
           console.error("No level data found");
           return;
@@ -4046,23 +4114,28 @@ window.__require = function e(t, n, r) {
           onTryAgain: this.reloadGame.bind(this),
           onNextLevel: this.reloadGame.bind(this)
         });
-        this.selectionPopup.init(this.onStartSelectionClosed.bind(this));
-        this.cat.node.active = false;
-        setTimeout(function() {
-          _this.selectionPopup.show(_this.levelData);
-        }, 200);
-        this.node.on(cc.Node.EventType.TOUCH_START, this.gameBoard.onTouchStart, this.gameBoard);
-        this.node.on(cc.Node.EventType.TOUCH_MOVE, this.gameBoard.onTouchMove, this.gameBoard);
-        this.node.on(cc.Node.EventType.TOUCH_END, this.gameBoard.onTouchEnd, this.gameBoard);
-        this.node.on(cc.Node.EventType.TOUCH_CANCEL, this.gameBoard.onTouchCancel, this.gameBoard);
+        if (DEBUG.SKIP_SELECTION_POPUP) {
+          this.onStartSelectionClosed();
+          this.selectionPopup.node.active = false;
+        } else {
+          this.selectionPopup.init(this.onStartSelectionClosed.bind(this));
+          this.cat.node.active = false;
+          setTimeout(function() {
+            _this.selectionPopup.show(_this.levelData);
+          }, 200);
+        }
+        this.gameBoardContainer.on(cc.Node.EventType.TOUCH_START, this.gameBoard.onTouchStart, this.gameBoard);
+        this.gameBoardContainer.on(cc.Node.EventType.TOUCH_MOVE, this.gameBoard.onTouchMove, this.gameBoard);
+        this.gameBoardContainer.on(cc.Node.EventType.TOUCH_END, this.gameBoard.onTouchEnd, this.gameBoard);
+        this.gameBoardContainer.on(cc.Node.EventType.TOUCH_CANCEL, this.gameBoard.onTouchCancel, this.gameBoard);
         this.app.setSceneVisible(this);
       },
       onDestroy: function onDestroy() {
         this.app.info("Game.js - onDestroy");
-        this.node.off(cc.Node.EventType.TOUCH_START, this.gameBoard.onTouchStart, this.gameBoard);
-        this.node.off(cc.Node.EventType.TOUCH_MOVE, this.gameBoard.onTouchMove, this.gameBoard);
-        this.node.off(cc.Node.EventType.TOUCH_END, this.gameBoard.onTouchEnd, this.gameBoard);
-        this.node.off(cc.Node.EventType.TOUCH_CANCEL, this.gameBoard.onTouchCancel, this.gameBoard);
+        this.gameBoardContainer.off(cc.Node.EventType.TOUCH_START, this.gameBoard.onTouchStart, this.gameBoard);
+        this.gameBoardContainer.off(cc.Node.EventType.TOUCH_MOVE, this.gameBoard.onTouchMove, this.gameBoard);
+        this.gameBoardContainer.off(cc.Node.EventType.TOUCH_END, this.gameBoard.onTouchEnd, this.gameBoard);
+        this.gameBoardContainer.off(cc.Node.EventType.TOUCH_CANCEL, this.gameBoard.onTouchCancel, this.gameBoard);
         this.app.setSceneHidden(this);
       },
       endGame: function endGame(isWon) {
@@ -4083,7 +4156,7 @@ window.__require = function e(t, n, r) {
       },
       showResult: function showResult() {
         if (!this.result.isShowing) {
-          this.result.setNextButtonState(this.levelData.id === _constants["default"].GAME_DESIGN_TEST || _levelModel["default"].hasNextLevel(this.levelData.id));
+          this.result.setNextButtonState(this.levelData.id === DEBUG.TEST_LEVEL || _levelModel["default"].hasNextLevel(this.levelData.id));
           if (this.isGameWon && this.levelData.rewards && this.levelData.rewards["supply"]) {
             var rewardSupplyItem = this.levelData.rewards["supply"];
             _userState["default"].addSupply(rewardSupplyItem);
@@ -4109,6 +4182,7 @@ window.__require = function e(t, n, r) {
           GameItem: this.GameItem,
           GameItemSpawner: this.GameItemSpawner,
           spriteCollection: this.spriteCollection,
+          boosterController: this.boosterController,
           app: this.app,
           onGameItemDestroy: this.onGameItemDestroy.bind(this),
           onIdle: this.onBoardIdle.bind(this),
@@ -4156,9 +4230,14 @@ window.__require = function e(t, n, r) {
         wallpaper.y = -this.scaleContainer.height / 2;
         wallpaper.height = this.scaleContainer.height - TOP_AREA_HEIGHT * uiScale;
         this.gameBoardContainer.scale = gameBoardMaxSide / (9 * TILE_SIZE);
+        this.gameBoardContainer.height = 9 * TILE_SIZE;
+        this.gameBoardContainer.width = 9 * TILE_SIZE;
         this.gameBoardContainer.y = (BOT_AREA_HEIGHT - TOP_AREA_HEIGHT - this.topUI.height + TOPBG_TOP_MARGIN + TOPBG_BOT_MARGIN) * uiScale * .5 + TILE_SIZE / 2 * this.gameBoardContainer.scale;
         this.bottomUI.y = -this.scaleContainer.height / 2;
         this.boosterFrame.scale = uiScale;
+        this.boosterOverlay.height = (this.scaleContainer.height + 300) / uiScale;
+        this.boosterOverlay.width = this.scaleContainer.width / uiScale;
+        this.boosterContent.y = this.boosterOverlay.height - .5 * this.boosterContent.height - 300 / uiScale;
         this.result.updateScreenSize(frame);
         this.confirmation.updateScreenSize();
       },
@@ -4391,7 +4470,7 @@ window.__require = function e(t, n, r) {
         default: obj
       };
     }
-    var IPAD_RATIO = _constants["default"].IPAD_RATIO;
+    var IPAD_RATIO = _constants["default"].IPAD_RATIO, DEBUG = _constants["default"].DEBUG;
     var CENTER_HEIGHT = 1600;
     cc.Class({
       extends: cc.Component,
@@ -4406,7 +4485,7 @@ window.__require = function e(t, n, r) {
         this.qaPanel = this.scaleContainer.getChildByName("QAPanel").getComponent("QAPanel");
         this.topUI = this.scaleContainer.getChildByName("TopUI").getComponent("TopUI");
         this.app.setSceneVisible(this);
-        if (_constants["default"].GAME_DESIGN_TEST && !globalThis.notFirstTime) {
+        if (DEBUG.TEST_LEVEL && !globalThis.notFirstTime) {
           globalThis.notFirstTime = true;
           var homeNode = cc.find("Canvas").getComponent("Home");
           this.app.changeScene(homeNode, "Game");
@@ -4547,7 +4626,27 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.SpriteFrame
         },
-        simpleCrate1hp: {
+        crateBrown1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateRed1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateYellow1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateGreen1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateBlue1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cratePurple1: {
           default: null,
           type: cc.SpriteFrame
         },
@@ -7462,10 +7561,13 @@ window.__require = function e(t, n, r) {
     var BOOSTER_SIZE = 256;
     var ITEM_SIZE = 200;
     var SLOW_MOTION = 0;
-    var GAME_DESIGN_TEST = null;
     var DYNAMIC_USER_INTERACTION = true;
+    var DEBUG = {
+      TEST_LEVEL: null,
+      SKIP_SELECTION_POPUP: false
+    };
     var _default = {
-      GAME_DESIGN_TEST: GAME_DESIGN_TEST,
+      DEBUG: DEBUG,
       IPAD_RATIO: .75,
       MAX_BOOSTER_SELECTION: 3,
       GAMEPLAY: {
@@ -7522,9 +7624,24 @@ window.__require = function e(t, n, r) {
           discoball: "discoball",
           sniper: "sniper",
           bomb: "bomb",
-          simpleCrate1hp: "simpleCrate1hp",
-          simpleCrate2hp: "simpleCrate2hp",
-          simpleCrate3hp: "simpleCrate3hp",
+          crateBrown1: "crateBrown1",
+          crateBrown2: "crateBrown2",
+          crateBrown3: "crateBrown3",
+          crateRed1: "crateRed1",
+          crateRed2: "crateRed2",
+          crateRed3: "crateRed3",
+          crateYellow1: "crateYellow1",
+          crateYellow2: "crateYellow2",
+          crateYellow3: "crateYellow3",
+          crateGreen1: "crateGreen1",
+          crateGreen2: "crateGreen2",
+          crateGreen3: "crateGreen3",
+          crateBlue1: "crateBlue1",
+          crateBlue2: "crateBlue2",
+          crateBlue3: "crateBlue3",
+          cratePurple1: "cratePurple1",
+          cratePurple2: "cratePurple2",
+          cratePurple3: "cratePurple3",
           movableDestructible1: "movableDestructible1"
         },
         ITEM_SHATTER_COLOR: {
@@ -7742,11 +7859,26 @@ window.__require = function e(t, n, r) {
     var M = "missiles1";
     var m = "missiles2";
     var s = "sniper";
-    var x = "simpleCrate1hp";
-    var X = "simpleCrate2hp";
-    var z = "simpleCrate3hp";
+    var x = "crateBrown1";
+    var X = "crateBrown2";
+    var z = "crateBrown3";
+    var a = "crateRed1";
+    var c = "crateRed2";
+    var d = "crateRed3";
+    var e = "crateYellow1";
+    var f = "crateYellow2";
+    var h = "crateYellow3";
+    var i = "crateGreen1";
+    var j = "crateGreen2";
+    var k = "crateGreen3";
+    var l = "crateBlue1";
+    var n = "crateBlue2";
+    var o = "crateBlue3";
+    var q = "cratePurple1";
+    var u = "cratePurple2";
+    var v = "cratePurple3";
     var t = "movableDestructible1";
-    var levelsOrder = [ "4", "6", "7", "8", "9", "10", "5", "11", "12", "13" ];
+    var levelsOrder = [ "4", "999991", "6", "7", "8", "9", "10", "5", "11", "12", "13" ];
     exports.levelsOrder = levelsOrder;
     var _default = {
       1: {
@@ -7935,7 +8067,7 @@ window.__require = function e(t, n, r) {
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ O, O, X, O, t, O, X, O, O ], [ O, O, X, O, t, O, X, O, O ], [ O, r, X, g, t, b, X, g, O ], [ O, y, X, g, t, b, X, r, O ], [ O, b, X, r, t, y, X, r, O ], [ O, g, X, g, t, r, X, b, O ], [ O, O, O, O, O, O, O, O, O ], [ y, r, y, r, r, y, b, r, b ], [ O, b, r, g, g, b, r, b, O ] ]
       },
-      "debug:stable": {
+      999990: {
         isDebug: true,
         objectives: [ {
           type: r,
@@ -7951,7 +8083,23 @@ window.__require = function e(t, n, r) {
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ r, y, g, b, r, y, g, b, r ], [ g, b, r, y, g, b, r, y, g ], [ r, y, g, b, r, D, g, b, r ], [ g, b, r, y, g, b, r, D, g ], [ r, y, g, D, r, y, g, b, r ], [ g, b, r, y, g, b, r, y, g ], [ r, y, D, b, r, y, g, b, r ], [ g, b, r, y, g, b, r, y, g ], [ r, y, g, b, r, y, g, b, r ] ]
       },
-      "debug:noMoveAvailable1": {
+      999991: {
+        isDebug: true,
+        objectives: [ {
+          type: a,
+          amount: 9
+        }, {
+          type: i,
+          amount: 9
+        }, {
+          type: l,
+          amount: 9
+        } ],
+        turns: 999,
+        spawnPattern: [ A, A, A, A, A, A, A, A, A ],
+        pattern: [ [ a, e, q, b, r, y, l, i, x ], [ a, e, q, y, g, b, l, i, x ], [ a, e, q, b, r, D, l, i, x ], [ a, e, q, y, g, b, l, i, x ], [ a, e, q, D, r, y, l, i, x ], [ c, f, u, y, g, b, n, j, X ], [ c, f, u, b, r, y, n, j, X ], [ d, h, v, y, g, b, o, k, z ], [ d, h, v, b, r, y, o, k, z ] ]
+      },
+      999992: {
         isDebug: true,
         objectives: [ {
           type: r,
@@ -7967,7 +8115,7 @@ window.__require = function e(t, n, r) {
         spawnPattern: [ A, A, A, A, A, A ],
         pattern: [ [ A, A, A, A, A, A ], [ A, z, z, z, z, A ], [ A, z, z, z, z, A ], [ A, z, z, z, z, A ], [ A, z, z, z, z, A ], [ A, A, A, A, A, A ] ]
       },
-      "debug:noMoveAvailable2": {
+      999993: {
         isDebug: true,
         objectives: [ {
           type: r,
@@ -8075,61 +8223,135 @@ window.__require = function e(t, n, r) {
     }
     var Z_INDEX = _constants["default"].GAMEPLAY.Z_INDEX;
     var SHAKE_DURATION = 300;
+    var COLOR_SENSITIVITY = {
+      Red: ":basic1",
+      Yellow: ":basic2",
+      Green: ":basic3",
+      Blue: ":basic4",
+      Purple: ":basic5"
+    };
     var simpleCrate = {
       properties: {
-        simpleCrate1hp: {
+        crateBrown1: {
           default: null,
           type: cc.SpriteFrame
         },
-        simpleCrate2hp: {
+        crateBrown2: {
           default: null,
           type: cc.SpriteFrame
         },
-        simpleCrate3hp: {
+        crateBrown3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateRed1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateRed2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateRed3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateYellow1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateYellow2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateYellow3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateGreen1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateGreen2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateGreen3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateBlue1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateBlue2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateBlue3: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cratePurple1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cratePurple2: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        cratePurple3: {
           default: null,
           type: cc.SpriteFrame
         }
       },
       is: function is(type) {
-        return "simpleCrate1hp" === type || "simpleCrate2hp" === type || "simpleCrate3hp" === type;
+        return "crateBrown1" === type || "crateBrown2" === type || "crateBrown3" === type || "crateRed1" === type || "crateRed2" === type || "crateRed3" === type || "crateYellow1" === type || "crateYellow2" === type || "crateYellow3" === type || "crateGreen1" === type || "crateGreen2" === type || "crateGreen3" === type || "crateBlue1" === type || "crateBlue2" === type || "crateBlue3" === type || "cratePurple1" === type || "cratePurple2" === type || "cratePurple3" === type;
       },
       init: function init(that, options) {
         that.isBlockingCascade = true;
         that.isSensitive = true;
         that.node.zIndex = Z_INDEX.BLOCKER_ITEM;
-        switch (options.type) {
-         case "simpleCrate1hp":
+        var type = options.type;
+        var color = type.substring(5, type.length - 1);
+        that.simpleCrateData = {
+          color: color
+        };
+        switch (type) {
+         case "crate" + color + "1":
           that._addLayers({
-            1: that.simpleCrate1hp
+            1: that["crate" + color + "1"]
           });
           that.currentLayerId = "1";
           break;
 
-         case "simpleCrate2hp":
+         case "crate" + color + "2":
           that.lifePoints = 2;
           that._addLayers({
-            1: that.simpleCrate1hp,
-            2: that.simpleCrate2hp
+            1: that["crate" + color + "1"],
+            2: that["crate" + color + "2"]
           });
           that.currentLayerId = "2";
           break;
 
-         case "simpleCrate3hp":
+         case "crate" + color + "3":
           that.lifePoints = 3;
           that._addLayers({
-            1: that.simpleCrate1hp,
-            2: that.simpleCrate2hp,
-            3: that.simpleCrate3hp
+            1: that["crate" + color + "1"],
+            2: that["crate" + color + "2"],
+            3: that["crate" + color + "3"]
           });
           that.currentLayerId = "3";
         }
       },
       gotHit: function gotHit(that, reason, resolve) {
+        var color = that.simpleCrateData.color;
+        if (COLOR_SENSITIVITY[color] && "sensitive:" === reason.slice(0, 10) && reason.slice(-7) !== COLOR_SENSITIVITY[color]) return resolve();
         that.onUpdate && that.onUpdate.shaking && that.onUpdate.shaking.data.resolve();
         that.lifePoints--;
         that._checkLifePoints();
         if (0 === that.lifePoints) return that._defaultExplode(reason, resolve);
-        that.type = "simpleCrate" + that.lifePoints + "hp";
+        that.type = "crate" + color + that.lifePoints;
         that.currentLayerId = that.lifePoints;
         that.onUpdate || (that.onUpdate = {});
         that.onUpdate.shaking = {
@@ -8357,7 +8579,7 @@ window.__require = function e(t, n, r) {
     function saveYard(data) {
       localStorage.setItem("userState.yardItems", JSON.stringify(data));
     }
-    var defaultSuppliesData = [ "tunnel", "tower", "tent", "swing", "swimRing", "stretchingBoard", "rubberBallRed", "rubberBallRainbow", "pot", "plushDoll", "paperBag2", "paperBag1", "hamburgerCushion", "featherToy", "cushionPink", "cushionOrange", "cushionBlue", "bed" ];
+    var defaultSuppliesData = [ "tunnel" ];
     function getSupplies() {
       var dataString = localStorage.getItem("userState.supplies");
       var data = [];
