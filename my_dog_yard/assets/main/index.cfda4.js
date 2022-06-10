@@ -356,6 +356,182 @@ window.__require = function e(t, n, r) {
       };
     }
   }, {} ],
+  3: [ function(require, module, exports) {
+    "use strict";
+    var tweenFunctions = {
+      linear: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * t / d + b;
+      },
+      easeInQuad: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * (t /= d) * t + b;
+      },
+      easeOutQuad: function(t, b, _c, d) {
+        var c = _c - b;
+        return -c * (t /= d) * (t - 2) + b;
+      },
+      easeInOutQuad: function(t, b, _c, d) {
+        var c = _c - b;
+        return (t /= d / 2) < 1 ? c / 2 * t * t + b : -c / 2 * (--t * (t - 2) - 1) + b;
+      },
+      easeInCubic: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * (t /= d) * t * t + b;
+      },
+      easeOutCubic: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * ((t = t / d - 1) * t * t + 1) + b;
+      },
+      easeInOutCubic: function(t, b, _c, d) {
+        var c = _c - b;
+        return (t /= d / 2) < 1 ? c / 2 * t * t * t + b : c / 2 * ((t -= 2) * t * t + 2) + b;
+      },
+      easeInQuart: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * (t /= d) * t * t * t + b;
+      },
+      easeOutQuart: function(t, b, _c, d) {
+        var c = _c - b;
+        return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+      },
+      easeInOutQuart: function(t, b, _c, d) {
+        var c = _c - b;
+        return (t /= d / 2) < 1 ? c / 2 * t * t * t * t + b : -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+      },
+      easeInQuint: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * (t /= d) * t * t * t * t + b;
+      },
+      easeOutQuint: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+      },
+      easeInOutQuint: function(t, b, _c, d) {
+        var c = _c - b;
+        return (t /= d / 2) < 1 ? c / 2 * t * t * t * t * t + b : c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+      },
+      easeInSine: function(t, b, _c, d) {
+        var c = _c - b;
+        return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+      },
+      easeOutSine: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * Math.sin(t / d * (Math.PI / 2)) + b;
+      },
+      easeInOutSine: function(t, b, _c, d) {
+        var c = _c - b;
+        return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
+      },
+      easeInExpo: function(t, b, _c, d) {
+        var c = _c - b;
+        return 0 == t ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
+      },
+      easeOutExpo: function(t, b, _c, d) {
+        var c = _c - b;
+        return t == d ? b + c : c * (1 - Math.pow(2, -10 * t / d)) + b;
+      },
+      easeInOutExpo: function(t, b, _c, d) {
+        var c = _c - b;
+        if (0 === t) return b;
+        if (t === d) return b + c;
+        return (t /= d / 2) < 1 ? c / 2 * Math.pow(2, 10 * (t - 1)) + b : c / 2 * (2 - Math.pow(2, -10 * --t)) + b;
+      },
+      easeInCirc: function(t, b, _c, d) {
+        var c = _c - b;
+        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+      },
+      easeOutCirc: function(t, b, _c, d) {
+        var c = _c - b;
+        return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+      },
+      easeInOutCirc: function(t, b, _c, d) {
+        var c = _c - b;
+        return (t /= d / 2) < 1 ? -c / 2 * (Math.sqrt(1 - t * t) - 1) + b : c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+      },
+      easeInElastic: function(t, b, _c, d) {
+        var c = _c - b;
+        var a, p, s;
+        s = 1.70158;
+        p = 0;
+        a = c;
+        if (0 === t) return b;
+        if (1 === (t /= d)) return b + c;
+        p || (p = .3 * d);
+        if (a < Math.abs(c)) {
+          a = c;
+          s = p / 4;
+        } else s = p / (2 * Math.PI) * Math.asin(c / a);
+        return -a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) + b;
+      },
+      easeOutElastic: function(t, b, _c, d) {
+        var c = _c - b;
+        var a, p, s;
+        s = 1.70158;
+        p = 0;
+        a = c;
+        if (0 === t) return b;
+        if (1 === (t /= d)) return b + c;
+        p || (p = .3 * d);
+        if (a < Math.abs(c)) {
+          a = c;
+          s = p / 4;
+        } else s = p / (2 * Math.PI) * Math.asin(c / a);
+        return a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;
+      },
+      easeInOutElastic: function(t, b, _c, d) {
+        var c = _c - b;
+        var a, p, s;
+        s = 1.70158;
+        p = 0;
+        a = c;
+        if (0 === t) return b;
+        if (2 === (t /= d / 2)) return b + c;
+        p || (p = d * (.3 * 1.5));
+        if (a < Math.abs(c)) {
+          a = c;
+          s = p / 4;
+        } else s = p / (2 * Math.PI) * Math.asin(c / a);
+        return t < 1 ? a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * -.5 + b : a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * .5 + c + b;
+      },
+      easeInBack: function(t, b, _c, d, s) {
+        var c = _c - b;
+        void 0 === s && (s = 1.70158);
+        return c * (t /= d) * t * ((s + 1) * t - s) + b;
+      },
+      easeOutBack: function(t, b, _c, d, s) {
+        var c = _c - b;
+        void 0 === s && (s = 1.70158);
+        return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+      },
+      easeInOutBack: function(t, b, _c, d, s) {
+        var c = _c - b;
+        void 0 === s && (s = 1.70158);
+        return (t /= d / 2) < 1 ? c / 2 * (t * t * ((1 + (s *= 1.525)) * t - s)) + b : c / 2 * ((t -= 2) * t * ((1 + (s *= 1.525)) * t + s) + 2) + b;
+      },
+      easeInBounce: function(t, b, _c, d) {
+        var c = _c - b;
+        var v;
+        v = tweenFunctions.easeOutBounce(d - t, 0, c, d);
+        return c - v + b;
+      },
+      easeOutBounce: function(t, b, _c, d) {
+        var c = _c - b;
+        return (t /= d) < 1 / 2.75 ? c * (7.5625 * t * t) + b : t < 2 / 2.75 ? c * (7.5625 * (t -= 1.5 / 2.75) * t + .75) + b : t < 2.5 / 2.75 ? c * (7.5625 * (t -= 2.25 / 2.75) * t + .9375) + b : c * (7.5625 * (t -= 2.625 / 2.75) * t + .984375) + b;
+      },
+      easeInOutBounce: function(t, b, _c, d) {
+        var c = _c - b;
+        var v;
+        if (t < d / 2) {
+          v = tweenFunctions.easeInBounce(2 * t, 0, c, d);
+          return .5 * v + b;
+        }
+        v = tweenFunctions.easeOutBounce(2 * t - d, 0, c, d);
+        return .5 * v + .5 * c + b;
+      }
+    };
+    module.exports = tweenFunctions;
+  }, {} ],
   BagBoosterItem: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "522aaV68pdPjKN16YogApeQ", "BagBoosterItem");
@@ -846,6 +1022,7 @@ window.__require = function e(t, n, r) {
       loadBoosters: function loadBoosters(gameBoard, confirmationPopup) {
         this.gameBoard = gameBoard;
         this.confirmationPopup = confirmationPopup;
+        this.isActive = false;
         this.data = _userState["default"].getBoosters();
         this.items = {};
         this.lockedUserInteraction = false;
@@ -928,6 +1105,7 @@ window.__require = function e(t, n, r) {
       },
       exitBoosterMode: function exitBoosterMode(isBoosterActivated, type) {
         var _this2 = this;
+        if (!this.isActive) return;
         this.isActive = false;
         this.selectingType && (this.items[this.selectingType].node.zIndex = 0);
         this.selectingType && this.items[this.selectingType].setSelected(false);
@@ -1410,6 +1588,7 @@ window.__require = function e(t, n, r) {
     "use strict";
     exports.__esModule = true;
     exports["default"] = void 0;
+    var _bumper = _interopRequireDefault(require("./GameItem/bumper.js"));
     var _constants = _interopRequireDefault(require("../constants.js"));
     var _helpers = _interopRequireDefault(require("../helpers.js"));
     var _Rnd = _interopRequireDefault(require("./Rnd.js"));
@@ -1485,6 +1664,7 @@ window.__require = function e(t, n, r) {
         var app = options.app;
         var pattern = options.pattern;
         var spawnPattern = options.spawnPattern;
+        var underlayPattern = options.underlayPattern;
         var view = options.view;
         var GameTile = options.GameTile;
         var GameItem = options.GameItem;
@@ -1522,6 +1702,7 @@ window.__require = function e(t, n, r) {
         this["final"] = [];
         this.spawnBlindSpot = [];
         this.spawners = [];
+        this.underlay = [];
         this.isCascading = false;
         this.startCascadeRequest = false;
         this.checkMatchesRequest = false;
@@ -1577,11 +1758,11 @@ window.__require = function e(t, n, r) {
           }
         }
         for (var _boardY2 = 0; _boardY2 < this.height; _boardY2++) {
-          this.board[_boardY2] = [];
+          this.underlay[_boardY2] = [];
           if (0 === _boardY2) continue;
           for (var _boardX2 = 0; _boardX2 < this.width; _boardX2++) {
             var gameItem = null;
-            var blueprint = pattern[_boardY2 - 1][_boardX2];
+            var blueprint = underlayPattern && underlayPattern[_boardY2 - 1][_boardX2];
             if (blueprint) {
               gameItem = this.getNewGameItemFromBlueprint(blueprint, view);
               if (gameItem) {
@@ -1591,13 +1772,31 @@ window.__require = function e(t, n, r) {
                 gameItem.boardY = _boardY2;
               }
             }
-            this.board[_boardY2][_boardX2] = gameItem;
+            this.underlay[_boardY2][_boardX2] = gameItem;
           }
         }
-        for (var _boardX3 = 0; _boardX3 < this.width; _boardX3++) {
+        for (var _boardY3 = 0; _boardY3 < this.height; _boardY3++) {
+          this.board[_boardY3] = [];
+          if (0 === _boardY3) continue;
+          for (var _boardX3 = 0; _boardX3 < this.width; _boardX3++) {
+            var _gameItem = null;
+            var _blueprint = pattern[_boardY3 - 1][_boardX3];
+            if (_blueprint) {
+              _gameItem = this.getNewGameItemFromBlueprint(_blueprint, view);
+              if (_gameItem) {
+                _gameItem.node.x = this.background[_boardY3][_boardX3].node.x;
+                _gameItem.node.y = this.background[_boardY3][_boardX3].node.y;
+                _gameItem.boardX = _boardX3;
+                _gameItem.boardY = _boardY3;
+              }
+            }
+            this.board[_boardY3][_boardX3] = _gameItem;
+          }
+        }
+        for (var _boardX4 = 0; _boardX4 < this.width; _boardX4++) {
           var spawnerBoardY = null;
-          for (var _boardY3 = 1; _boardY3 < this.height; _boardY3++) if (this.background[_boardY3][_boardX3] && (0 === _boardY3 || !this.background[_boardY3 - 1][_boardX3])) {
-            spawnerBoardY = _boardY3 - 1;
+          for (var _boardY4 = 1; _boardY4 < this.height; _boardY4++) if (this.background[_boardY4][_boardX4] && (0 === _boardY4 || !this.background[_boardY4 - 1][_boardX4])) {
+            spawnerBoardY = _boardY4 - 1;
             break;
           }
           if (null === spawnerBoardY) {
@@ -1605,14 +1804,14 @@ window.__require = function e(t, n, r) {
             continue;
           }
           var spawner = cc.instantiate(GameItemSpawner);
-          spawner.boardX = _boardX3;
+          spawner.boardX = _boardX4;
           spawner.boardY = spawnerBoardY;
           spawner.x = 0;
           spawner.y = 0;
-          spawner.anchorX = this.width / 2 - _boardX3;
-          spawner.anchorY = -this.height / 2 + spawnerBoardY + 1;
+          spawner.anchorX = this.width / 2 - _boardX4;
+          spawner.anchorY = -this.height / 2 + spawnerBoardY + .5;
           spawner.zIndex = Z_INDEX.ITEM;
-          spawner.blueprint = spawnPattern[_boardX3];
+          spawner.blueprint = spawnPattern[_boardX4];
           view.addChild(spawner);
           this.spawners.push(spawner);
         }
@@ -1737,6 +1936,7 @@ window.__require = function e(t, n, r) {
             var gameItem = matchGroup.gameItems[i];
             var shouldSpawnPowerUp = gameItem.boardX === matchGroup.targetPosition.boardX && gameItem.boardY === matchGroup.targetPosition.boardY;
             var powerUp = shouldSpawnPowerUp ? newPowerUp : null;
+            this.hitUnderlay(gameItem.boardX, gameItem.boardY, "match");
             this.hitGameItem(gameItem, "match", newPowerUp ? matchGroup.targetPosition : null, powerUp);
             this.comboReportAdd(comboId, gameItem);
           }
@@ -1803,6 +2003,30 @@ window.__require = function e(t, n, r) {
             _this2.board[y][x] = null;
             _this2.gameItemDisappearanceFinished(gameItem);
           }
+        });
+      };
+      _proto.hitGameItemCoordinate = function hitGameItemCoordinate(gameItem, reason) {
+        var boardX = gameItem.boardX, boardY = gameItem.boardY;
+        var underlayItem = this.underlay[boardY][boardX];
+        var overlayItem = this.board[boardY][boardX];
+        underlayItem && underlayItem.isDying && (underlayItem = null);
+        overlayItem && overlayItem.isDying && (overlayItem = null);
+        if (!underlayItem && !overlayItem) return false;
+        underlayItem && this.hitUnderlay(boardX, boardY, reason);
+        overlayItem && this.hitGameItem(overlayItem, reason);
+        return true;
+      };
+      _proto.hitUnderlay = function hitUnderlay(x, y, reason) {
+        var _this3 = this;
+        var gameItem = this.board[y][x];
+        if (gameItem && gameItem.isBlockingCascade && !gameItem.isDying) return;
+        var underlayItem = this.underlay[y][x];
+        if (!underlayItem) return;
+        if (underlayItem.isDying) return;
+        this.itemsWaitingForDisappear++;
+        underlayItem.gotHit(reason).then(function() {
+          _this3.itemsWaitingForDisappear--;
+          0 === underlayItem.lifePoints && (_this3.underlay[y][x] = null);
         });
       };
       _proto.gameItemDisappearanceFinished = function gameItemDisappearanceFinished(gameItem) {
@@ -2246,7 +2470,7 @@ window.__require = function e(t, n, r) {
         gameItem.highlight(material);
       };
       _proto.onTouchMove = function onTouchMove(e) {
-        var _this3 = this;
+        var _this4 = this;
         if (this.lockedUserInteraction) return this.resetDrag();
         if (this.explodingDiscoBalls.length > 0) return this.resetDrag();
         if (!this.dragging.gameItem) return;
@@ -2331,24 +2555,24 @@ window.__require = function e(t, n, r) {
             lockedGameItems[_i5] && lockedGameItems[_i5].locksForUpcomingMatch || console.warn("an item locked for upcoming match had his status changed");
             lockedGameItems[_i5].locksForUpcomingMatch--;
           }
-          "sniper" === gameItem.type && _this3.triggerSniper(gameItem);
-          "sniper" === targetItem.type && _this3.triggerSniper(targetItem);
-          "bomb" === gameItem.type && _this3.triggerBomb(gameItem);
-          "bomb" === targetItem.type && _this3.triggerBomb(targetItem);
-          "discoball" === gameItem.type && _this3.triggerDiscoball(gameItem, targetItem);
-          "discoball" === targetItem.type && _this3.triggerDiscoball(targetItem, gameItem);
-          "missiles1" !== gameItem.type && "missiles2" !== gameItem.type || _this3.triggerMissile(gameItem);
-          "missiles1" !== targetItem.type && "missiles2" !== targetItem.type || _this3.triggerMissile(targetItem);
-          _this3.checkMatchesRequest = true;
-          _this3.switchingCount--;
+          "sniper" === gameItem.type && _this4.triggerSniper(gameItem);
+          "sniper" === targetItem.type && _this4.triggerSniper(targetItem);
+          "bomb" === gameItem.type && _this4.triggerBomb(gameItem);
+          "bomb" === targetItem.type && _this4.triggerBomb(targetItem);
+          "discoball" === gameItem.type && _this4.triggerDiscoball(gameItem, targetItem);
+          "discoball" === targetItem.type && _this4.triggerDiscoball(targetItem, gameItem);
+          "missiles1" !== gameItem.type && "missiles2" !== gameItem.type || _this4.triggerMissile(gameItem);
+          "missiles1" !== targetItem.type && "missiles2" !== targetItem.type || _this4.triggerMissile(targetItem);
+          _this4.checkMatchesRequest = true;
+          _this4.switchingCount--;
         });
       };
       _proto.onTouchEnd = function onTouchEnd(e) {
         if (this.booster) {
-          var _gameItem = this.gameItemFromTouchEvent(e);
-          if (!_gameItem) return;
-          if (!this.isValidForBoosterActivation(_gameItem)) return;
-          this.exitBoosterMode(this.activateBooster(_gameItem));
+          var _gameItem2 = this.gameItemFromTouchEvent(e);
+          if (!_gameItem2) return;
+          if (!this.isValidForBoosterActivation(_gameItem2)) return;
+          this.exitBoosterMode(this.activateBooster(_gameItem2));
         }
         if (this.lockedUserInteraction) return this.resetDrag();
         if (this.explodingDiscoBalls.length > 0) return this.resetDrag();
@@ -2378,7 +2602,7 @@ window.__require = function e(t, n, r) {
         var boardX = this.viewXToBoardX(x);
         var boardY = this.viewYToBoardY(y);
         if (!this.isValidCoordinate(boardX, boardY)) return null;
-        return this.board[boardY][boardX];
+        return this.board[boardY][boardX] || this.underlay[boardY][boardX];
       };
       _proto.enterBoosterMode = function enterBoosterMode(type) {
         this.booster = type;
@@ -2432,8 +2656,7 @@ window.__require = function e(t, n, r) {
         }
       };
       _proto.triggerHammer = function triggerHammer(gameItem) {
-        this.hitGameItem(gameItem, "booster");
-        return true;
+        return this.hitGameItemCoordinate(gameItem, "booster");
       };
       _proto.triggerAirplane = function triggerAirplane(gameItem) {
         if (!gameItem.isIdle()) return false;
@@ -2500,13 +2723,13 @@ window.__require = function e(t, n, r) {
         return true;
       };
       _proto.triggerPaintbrush = function triggerPaintbrush(gameItem) {
-        var _this4 = this;
+        var _this5 = this;
         this.itemsWaitingForDisappear++;
         var transformedOpts = _extends({}, gameItem.options);
         transformedOpts.type = this.boosterController.getPaintbrushTargetType();
         this.transformItem(gameItem, transformedOpts).then(function() {
-          _this4.itemsWaitingForDisappear--;
-          _this4.checkMatchesRequest = true;
+          _this5.itemsWaitingForDisappear--;
+          _this5.checkMatchesRequest = true;
         });
         return true;
       };
@@ -2525,7 +2748,7 @@ window.__require = function e(t, n, r) {
         return true;
       };
       _proto.triggerWheel = function triggerWheel() {
-        var _this5 = this;
+        var _this6 = this;
         var items = [];
         for (var y = 0; y < this.height; y++) for (var x = 0; x < this.width; x++) {
           var gameItem = this.board[y][x];
@@ -2539,12 +2762,12 @@ window.__require = function e(t, n, r) {
         _helpers["default"].shuffleArray(shuffledItems);
         for (var i = 0; i < items.length; i++) replacementMap[items[i].boardX + "_" + items[i].boardY] = shuffledItems[i];
         this._switchPlaces(replacementMap).then(function() {
-          _this5.checkMatchesRequest = true;
+          _this6.checkMatchesRequest = true;
         });
         return true;
       };
       _proto.triggerFullTypeWheel = function triggerFullTypeWheel() {
-        var _this6 = this;
+        var _this7 = this;
         if (!this.app.IS_DEVELOPMENT) return;
         var gameItems = [];
         for (var y = 0; y < this.height; y++) for (var x = 0; x < this.width; x++) {
@@ -2560,8 +2783,8 @@ window.__require = function e(t, n, r) {
         for (var i = 0; i < gameItems.length; i++) promiseCollection.push(this.transformItem(gameItems[i], _extends({}, shuffledItemOptions[i])));
         this.itemsWaitingForDisappear++;
         Promise.all(promiseCollection).then(function() {
-          _this6.itemsWaitingForDisappear--;
-          _this6.checkMatchesRequest = true;
+          _this7.itemsWaitingForDisappear--;
+          _this7.checkMatchesRequest = true;
         });
         return false;
       };
@@ -2575,11 +2798,12 @@ window.__require = function e(t, n, r) {
           var comboId = uid;
           this.comboReportStart(comboId);
           for (var _iterator = _createForOfIteratorHelperLoose(pool), _step; !(_step = _iterator()).done; ) {
-            var _gameItem2 = _step.value;
-            if (!_gameItem2 || _gameItem2.isDying) continue;
-            _gameItem2.unhighlightDisco();
-            this.hitGameItem(_gameItem2, "booster");
-            this.comboReportAdd(comboId, _gameItem2);
+            var _gameItem3 = _step.value;
+            if (!_gameItem3 || _gameItem3.isDying) continue;
+            _gameItem3.unhighlightDisco();
+            this.hitUnderlay(_gameItem3.boardX, _gameItem3.boardY, "booster");
+            this.hitGameItem(_gameItem3, "booster");
+            this.comboReportAdd(comboId, _gameItem3);
           }
           this.comboReportEnd(comboId, "booster");
           _helpers["default"].removeFromArray(targetType, this.explodingDiscoBalls);
@@ -2613,6 +2837,7 @@ window.__require = function e(t, n, r) {
         var gi;
         this.comboReportAdd(comboId, gameItem);
         for (var _b = 0; _b <= 1; _b++) for (var y = fromY; y <= toY; y++) for (var x = fromX; x <= toX; x++) {
+          _b && this.hitUnderlay(x, y, "powerup");
           gi = (_b ? this.board : this.next)[y][x];
           if (!gi) continue;
           if (gi.isDying) continue;
@@ -2695,14 +2920,14 @@ window.__require = function e(t, n, r) {
         if (targetItem && targetItem.isMatchable && !invalidTypes[targetItem.type]) targetType = targetItem.type; else {
           var typesCount = {};
           for (var y = 1; y < this.height; y++) for (var x = 0; x <= this.width; x++) {
-            var _gameItem3 = this.board[y][x] || this.next[y][x];
-            if (!_gameItem3) continue;
-            if (!_gameItem3.isMatchable) continue;
-            if (_gameItem3.isDying) continue;
-            if (_gameItem3.lockedForDiscoball) continue;
-            if (invalidTypes[_gameItem3.type]) continue;
-            typesCount[_gameItem3.type] || (typesCount[_gameItem3.type] = 0);
-            typesCount[_gameItem3.type]++;
+            var _gameItem4 = this.board[y][x] || this.next[y][x];
+            if (!_gameItem4) continue;
+            if (!_gameItem4.isMatchable) continue;
+            if (_gameItem4.isDying) continue;
+            if (_gameItem4.lockedForDiscoball) continue;
+            if (invalidTypes[_gameItem4.type]) continue;
+            typesCount[_gameItem4.type] || (typesCount[_gameItem4.type] = 0);
+            typesCount[_gameItem4.type]++;
           }
           for (var type in typesCount) (!typesCount[targetType] || typesCount[type] > typesCount[targetType]) && (targetType = type);
         }
@@ -2830,7 +3055,7 @@ window.__require = function e(t, n, r) {
         var boardX = this.viewXToBoardX(gameItem.node.x);
         var boardY = this.viewYToBoardY(gameItem.node.y);
         if (target && boardX === target.boardX && boardY === target.boardY) {
-          this.hitGameItem(target, "powerup");
+          this.hitGameItemCoordinate(target, "powerup");
           delete this.sniperTargets[target.uid];
           sniperData.landingStartedAt = this.app.now;
           var comboId = gameItem.uid;
@@ -2844,12 +3069,14 @@ window.__require = function e(t, n, r) {
         var bestScore = 0;
         var bestItems = null;
         for (var y = 1; y < this.height; y++) for (var x = 0; x <= this.width; x++) {
-          var gameItem = this.board[y][x];
+          var score = 0;
+          var underlayItem = this.underlay[y][x];
+          this._isValidSniperTarget(underlayItem) && (this.sniperTargets[underlayItem.uid] || (score = Math.max(100, score)));
+          var gameItem = this.board[y][x] || underlayItem;
           if (!this._isValidSniperTarget(gameItem)) continue;
           if (this.sniperTargets[gameItem.uid]) continue;
-          var score = 10;
           var type = gameItem.type;
-          _simpleCrate["default"].is(type) || "movableDestructible1" === type ? score = 100 : "bomb" === type || "sniper" === type || "discoball" === type || "missiles1" === type || "missiles2" === type ? score = 1 : "basic5" === type && (score = 11);
+          score = _simpleCrate["default"].is(type) || _bumper["default"].is(type) || "movableDestructible1" === type ? Math.max(100, score) : "bomb" === type || "sniper" === type || "discoball" === type || "missiles1" === type || "missiles2" === type ? Math.max(1, score - 1) : "basic5" === type ? Math.max(11, score) : Math.max(10, score);
           if (score > bestScore) {
             bestScore = score;
             bestItems = [];
@@ -2876,7 +3103,7 @@ window.__require = function e(t, n, r) {
         return pool;
       };
       _proto._animateDiscoBall = function _animateDiscoBall(discoBallData, dt) {
-        var _this7 = this;
+        var _this8 = this;
         var pool = discoBallData.pool, nextUpdate = discoBallData.nextUpdate, discoBall = discoBallData.discoBall, targetType = discoBallData.targetType;
         var now = this.app.now;
         var delta = now - nextUpdate;
@@ -2889,18 +3116,20 @@ window.__require = function e(t, n, r) {
           this.comboReportStart(comboId);
           this.comboReportAdd(comboId, discoBall);
           for (var _iterator3 = _createForOfIteratorHelperLoose(pool), _step3; !(_step3 = _iterator3()).done; ) {
-            var _gameItem4 = _step3.value;
-            if (!_gameItem4 || _gameItem4.isDying) continue;
-            _gameItem4.unhighlightDisco();
-            this.hitGameItem(_gameItem4, "powerup");
-            this.comboReportAdd(comboId, _gameItem4);
+            var _gameItem5 = _step3.value;
+            if (!_gameItem5 || _gameItem5.isDying) continue;
+            _gameItem5.unhighlightDisco();
+            this.hitUnderlay(_gameItem5.boardX, _gameItem5.boardY, "powerup");
+            this.hitGameItem(_gameItem5, "powerup");
+            this.comboReportAdd(comboId, _gameItem5);
           }
           this.itemsWaitingForDisappear++;
           discoBall.gotHit("selfdestruction").then(function() {
-            _this7.itemsWaitingForDisappear--;
-            _this7.board[discoBall.boardY][discoBall.boardX] = null;
-            _this7.gameItemDisappearanceFinished(discoBall);
+            _this8.itemsWaitingForDisappear--;
+            _this8.board[discoBall.boardY][discoBall.boardX] = null;
+            _this8.gameItemDisappearanceFinished(discoBall);
           });
+          this.hitUnderlay(discoBall.boardX, discoBall.boardY, "selfdestruction");
           this.comboReportEnd(comboId, "powerup");
           _helpers["default"].removeFromArray(targetType, this.explodingDiscoBalls);
           _helpers["default"].removeFromArray(discoBallData, this.movingSprites);
@@ -2966,14 +3195,25 @@ window.__require = function e(t, n, r) {
         var toX = Math.max(previousPosition.boardX, boardX);
         var toY = Math.max(previousPosition.boardY, boardY);
         for (var bx = fromX; bx <= toX; bx++) for (var by = fromY; by <= toY; by++) for (var _b2 = 0; _b2 <= 1; _b2++) {
+          if (_b2) {
+            var underlayItem = this.underlay[by][bx];
+            if (underlayItem && !underlayItem.isDying && !affectedTargets[underlayItem.uid] && !affectedTargets["u_" + bx + "_" + by]) {
+              affectedTargets[underlayItem.uid] = true;
+              affectedTargets["u_" + bx + "_" + by] = true;
+              this.hitUnderlay(bx, by, reason);
+            }
+          }
           var gameItem = (_b2 ? this.board : this.next)[by][bx];
           if (!gameItem) continue;
           if (affectedTargets[gameItem.uid]) continue;
+          if (direction.x && affectedTargets[bx + "_*"]) continue;
+          if (direction.y && affectedTargets["*_" + by]) continue;
           if (gameItem.isDying) continue;
           if (gameItem.lockedForDiscoball) continue;
           if (gameItem.shouldExplode) continue;
           gameItem.explosionDuration = ITEM_EXPLODE_DURATION / 2;
           affectedTargets[gameItem.uid] = true;
+          direction.x ? affectedTargets[bx + "_*"] = true : affectedTargets["*_" + by] = true;
           _b2 ? this.hitGameItem(gameItem, reason) : gameItem.shouldExplode = true;
           this.comboReportAdd(comboId, gameItem);
         }
@@ -3028,15 +3268,15 @@ window.__require = function e(t, n, r) {
           if (gameItem.isPowerUpType()) return true;
         }
         for (var _y2 = 1; _y2 < this.height; _y2++) for (var _x = 0; _x < this.width; _x++) {
-          var _gameItem5 = this.board[_y2][_x];
-          if (!_gameItem5) continue;
-          if (!_gameItem5.isBasicType()) continue;
+          var _gameItem6 = this.board[_y2][_x];
+          if (!_gameItem6) continue;
+          if (!_gameItem6.isBasicType()) continue;
           if (this.isValidCoordinate(_x - 1, _y2)) {
             var giLeft = this.board[_y2][_x - 1];
             if (giLeft && !giLeft.isBlockingCascade) {
               var replacementMap = {};
-              replacementMap[giLeft.boardX + "_" + giLeft.boardY] = _gameItem5;
-              replacementMap[_gameItem5.boardX + "_" + _gameItem5.boardY] = giLeft;
+              replacementMap[giLeft.boardX + "_" + giLeft.boardY] = _gameItem6;
+              replacementMap[_gameItem6.boardX + "_" + _gameItem6.boardY] = giLeft;
               var _this$getMatchable3 = this.getMatchable(replacementMap), matched = _this$getMatchable3.matched, matchGroups = _this$getMatchable3.matchGroups;
               if (Object.keys(matchGroups).length) return true;
             }
@@ -3045,8 +3285,8 @@ window.__require = function e(t, n, r) {
             var giUp = this.board[_y2 - 1][_x];
             if (giUp && !giUp.isBlockingCascade) {
               var _replacementMap = {};
-              _replacementMap[giUp.boardX + "_" + giUp.boardY] = _gameItem5;
-              _replacementMap[_gameItem5.boardX + "_" + _gameItem5.boardY] = giUp;
+              _replacementMap[giUp.boardX + "_" + giUp.boardY] = _gameItem6;
+              _replacementMap[_gameItem6.boardX + "_" + _gameItem6.boardY] = giUp;
               var _this$getMatchable4 = this.getMatchable(_replacementMap), _matched = _this$getMatchable4.matched, _matchGroups = _this$getMatchable4.matchGroups;
               if (Object.keys(_matchGroups).length) return true;
             }
@@ -3362,15 +3602,15 @@ window.__require = function e(t, n, r) {
           var replacementMap = {};
           var coordinatesPoolIndex = 0;
           for (var gameItemUid in gameItemsById) {
-            var _gameItem6 = gameItemsById[gameItemUid];
-            var travelerIndex = travelers.indexOf(_gameItem6);
-            if (-1 !== travelerIndex) replacementMap[destination[travelerIndex].x + "_" + destination[travelerIndex].y] = _gameItem6; else {
+            var _gameItem7 = gameItemsById[gameItemUid];
+            var travelerIndex = travelers.indexOf(_gameItem7);
+            if (-1 !== travelerIndex) replacementMap[destination[travelerIndex].x + "_" + destination[travelerIndex].y] = _gameItem7; else {
               var c = coordinatesPool[coordinatesPoolIndex];
               while (c.x === destination[0].x && c.y === destination[0].y || c.x === destination[1].x && c.y === destination[1].y || c.x === destination[2].x && c.y === destination[2].y) {
                 coordinatesPoolIndex++;
                 c = coordinatesPool[coordinatesPoolIndex];
               }
-              replacementMap[c.x + "_" + c.y] = _gameItem6;
+              replacementMap[c.x + "_" + c.y] = _gameItem7;
               coordinatesPoolIndex++;
             }
           }
@@ -3381,7 +3621,7 @@ window.__require = function e(t, n, r) {
         this._fixNoMoveAvailableReplaceAll(gameItemsById);
       };
       _proto._switchPlaces = function _switchPlaces(replacementMap) {
-        var _this8 = this;
+        var _this9 = this;
         this.switchingCount++;
         var promiseCollection = [];
         var _loop = function _loop(coordId) {
@@ -3389,17 +3629,17 @@ window.__require = function e(t, n, r) {
           var coords = coordId.split("_");
           var x = Number(coords[0]);
           var y = Number(coords[1]);
-          promiseCollection.push(gameItem.moveSpriteTo(_this8.boardXToViewX(x), _this8.boardYToViewY(y), NO_MOVE_FIX_DURATION).then(function() {
+          promiseCollection.push(gameItem.moveSpriteTo(_this9.boardXToViewX(x), _this9.boardYToViewY(y), NO_MOVE_FIX_DURATION).then(function() {
             gameItem.boardX = x;
             gameItem.boardY = y;
-            _this8.board[y][x] = gameItem;
+            _this9.board[y][x] = gameItem;
           }));
         };
         for (var coordId in replacementMap) _loop(coordId);
         this.lockUserInteraction("_fixNoMoveAvailableMoveAround");
         return Promise.all(promiseCollection).then(function() {
-          _this8.unlockUserInteraction("_fixNoMoveAvailableMoveAround");
-          _this8.switchingCount--;
+          _this9.unlockUserInteraction("_fixNoMoveAvailableMoveAround");
+          _this9.switchingCount--;
         });
       };
       _proto._fixNoMoveAvailableReplaceAll = function _fixNoMoveAvailableReplaceAll(gameItemsById) {
@@ -3412,13 +3652,13 @@ window.__require = function e(t, n, r) {
         return boardX * TILE_SIZE - this.width * TILE_SIZE / 2 + TILE_SIZE / 2;
       };
       _proto.boardYToViewY = function boardYToViewY(boardY) {
-        return -(boardY * TILE_SIZE - this.height * TILE_SIZE / 2 + TILE_SIZE / 2);
+        return -(boardY * TILE_SIZE - this.height * TILE_SIZE / 2);
       };
       _proto.viewXToBoardX = function viewXToBoardX(viewX) {
         return Math.floor((viewX + this.width * TILE_SIZE / 2) / TILE_SIZE);
       };
       _proto.viewYToBoardY = function viewYToBoardY(viewY) {
-        return Math.floor((-viewY + this.height * TILE_SIZE / 2) / TILE_SIZE);
+        return Math.round((-viewY + this.height * TILE_SIZE / 2) / TILE_SIZE);
       };
       _proto.isValidCoordinate = function isValidCoordinate(boardX, boardY) {
         if (boardX < 0) return false;
@@ -3441,7 +3681,7 @@ window.__require = function e(t, n, r) {
         return toReturn;
       };
       _proto.transformItem = function transformItem(gameItem, newOptions) {
-        var _this9 = this;
+        var _this10 = this;
         var boardX = gameItem.boardX, boardY = gameItem.boardY;
         var _gameItem$node4 = gameItem.node, x = _gameItem$node4.x, y = _gameItem$node4.y, opacity = _gameItem$node4.opacity, scale = _gameItem$node4.scale;
         var transformingItem = cc.instantiate(this.GameItem).getComponent("GameItem");
@@ -3466,7 +3706,7 @@ window.__require = function e(t, n, r) {
           }, {
             easing: "backOut"
           }).delay(.1).call(function() {
-            _this9.board[boardY][boardX] = transformingItem;
+            _this10.board[boardY][boardX] = transformingItem;
             gameItem.destroy();
             resolve();
           }).start();
@@ -3496,7 +3736,8 @@ window.__require = function e(t, n, r) {
         gameItem.init({
           app: this.app,
           onDestroyCb: this.onGameItemDestroy,
-          type: type
+          type: type,
+          gameBoard: this
         });
         return gameItem;
       };
@@ -3549,6 +3790,7 @@ window.__require = function e(t, n, r) {
   }, {
     "../constants.js": "constants",
     "../helpers.js": "helpers",
+    "./GameItem/bumper.js": "bumper",
     "./GameItem/simpleCrate.js": "simpleCrate",
     "./Rnd.js": "Rnd"
   } ],
@@ -3556,9 +3798,11 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "fb0165kpG9GX5niWjNvxe4O", "GameItem");
     "use strict";
+    var _bumper = _interopRequireDefault(require("./bumper.js"));
     var _constants = _interopRequireDefault(require("../../constants.js"));
     var _helpers = _interopRequireDefault(require("../../helpers.js"));
     var _simpleCrate = _interopRequireDefault(require("./simpleCrate.js"));
+    var _underlay = _interopRequireDefault(require("./underlay.js"));
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : {
         default: obj
@@ -3667,9 +3911,10 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.SpriteFrame
         }
-      }, _simpleCrate["default"].properties),
+      }, _simpleCrate["default"].properties, _underlay["default"].properties, _bumper["default"].properties),
       ctor: function ctor() {
         this.app = null;
+        this.gameBoard = null;
         this.type = null;
         this.boardX = null;
         this.boardY = null;
@@ -3703,8 +3948,9 @@ window.__require = function e(t, n, r) {
       },
       init: function init(options) {
         this.options = options;
-        var app = options.app, onDestroyCb = options.onDestroyCb, type = options.type;
+        var app = options.app, onDestroyCb = options.onDestroyCb, type = options.type, gameBoard = options.gameBoard;
         this.app = app;
+        this.gameBoard = gameBoard;
         this.onDestroyCb = onDestroyCb;
         if (!GAME_ITEM_TYPE[type]) return console.error(type + " is not a valid item type");
         this.type = type;
@@ -3779,7 +4025,7 @@ window.__require = function e(t, n, r) {
           break;
 
          default:
-          _simpleCrate["default"].is(type) && _simpleCrate["default"].init(this, options);
+          _simpleCrate["default"].is(type) ? _simpleCrate["default"].init(this, options) : _underlay["default"].is(type) ? _underlay["default"].init(this, options) : _bumper["default"].is(type) && _bumper["default"].init(this, options);
         }
         this.node.scale = ITEM_SCALE;
       },
@@ -3791,6 +4037,8 @@ window.__require = function e(t, n, r) {
         var _this = this;
         return new Promise(function(resolve) {
           if (_simpleCrate["default"].is(_this.type)) return _simpleCrate["default"].gotHit(_this, reason, resolve);
+          if (_underlay["default"].is(_this.type)) return _underlay["default"].gotHit(_this, reason, resolve);
+          if (_bumper["default"].is(_this.type)) return _bumper["default"].gotHit(_this, reason, resolve);
           _this.lifePoints--;
           _this._checkLifePoints();
           if (0 === _this.lifePoints) return _this._defaultExplode(reason, resolve);
@@ -4003,7 +4251,9 @@ window.__require = function e(t, n, r) {
   }, {
     "../../constants.js": "constants",
     "../../helpers.js": "helpers",
-    "./simpleCrate.js": "simpleCrate"
+    "./bumper.js": "bumper",
+    "./simpleCrate.js": "simpleCrate",
+    "./underlay.js": "underlay"
   } ],
   GameTile: [ function(require, module, exports) {
     "use strict";
@@ -4095,6 +4345,8 @@ window.__require = function e(t, n, r) {
         this.result = this.scaleContainer.getChildByName("Result").getComponent("ResultController");
         this.confirmation = this.scaleContainer.getChildByName("Confirmation").getComponent("ConfirmationController");
         this.selectionPopup = this.scaleContainer.getChildByName("SelectionPopup").getComponent("StartSelectionPopup");
+        this.pausePopup = this.scaleContainer.getChildByName("PausePopup").getComponent("PausePopup");
+        this.pauseButton = this.topUI.getChildByName("pauseButton").getComponent(cc.Button);
         this.gameBoard = null;
         this.levelData = _levelModel["default"].getLevel(DEBUG.TEST_LEVEL || currentLevel);
         if (!this.levelData) {
@@ -4106,6 +4358,7 @@ window.__require = function e(t, n, r) {
         this.result.node.active = true;
         this.confirmation.node.active = true;
         this.selectionPopup.node.active = true;
+        this.pausePopup.node.active = true;
         this.objectiveController.loadObjectives(this.levelData.objectives, this.onObjectiveCompleted.bind(this));
         levelLabel.string = "LEVEL " + this.levelData.id;
         this.boosterController.init();
@@ -4113,6 +4366,10 @@ window.__require = function e(t, n, r) {
           onHome: this.loadHome.bind(this),
           onTryAgain: this.reloadGame.bind(this),
           onNextLevel: this.reloadGame.bind(this)
+        });
+        this.pausePopup.init({
+          onHome: this.loadHome.bind(this),
+          onRestart: this.reloadGame.bind(this)
         });
         if (DEBUG.SKIP_SELECTION_POPUP) {
           this.onStartSelectionClosed();
@@ -4128,6 +4385,7 @@ window.__require = function e(t, n, r) {
         this.gameBoardContainer.on(cc.Node.EventType.TOUCH_MOVE, this.gameBoard.onTouchMove, this.gameBoard);
         this.gameBoardContainer.on(cc.Node.EventType.TOUCH_END, this.gameBoard.onTouchEnd, this.gameBoard);
         this.gameBoardContainer.on(cc.Node.EventType.TOUCH_CANCEL, this.gameBoard.onTouchCancel, this.gameBoard);
+        this.pauseButton.node.on("click", this.onPauseClicked, this);
         this.app.setSceneVisible(this);
       },
       onDestroy: function onDestroy() {
@@ -4161,6 +4419,7 @@ window.__require = function e(t, n, r) {
             var rewardSupplyItem = this.levelData.rewards["supply"];
             _userState["default"].addSupply(rewardSupplyItem);
           }
+          this.pausePopup.isShowing && this.pausePopup.hide(true);
           this.result.show(this.isGameWon, this.levelData, true);
           this.gameBoard.gameFinished();
         }
@@ -4173,10 +4432,11 @@ window.__require = function e(t, n, r) {
         this.endGame(true);
       },
       createBoard: function createBoard(levelData) {
-        var spawnPattern = levelData.spawnPattern, pattern = levelData.pattern;
+        var spawnPattern = levelData.spawnPattern, pattern = levelData.pattern, underlayPattern = levelData.underlayPattern;
         this.gameBoard = new _GameBoard["default"]({
           spawnPattern: spawnPattern,
           pattern: pattern,
+          underlayPattern: underlayPattern,
           view: this.gameBoardContainer,
           GameTile: this.GameTile,
           GameItem: this.GameItem,
@@ -4222,17 +4482,17 @@ window.__require = function e(t, n, r) {
         this.topUI.scale = uiScale;
         this.topUI.width = 1049 / uiScale;
         this.topUI.y = this.scaleContainer.height / 2 - (TOP_AREA_HEIGHT - TOPBG_TOP_MARGIN) * uiScale;
-        var pauseButton = this.topUI.getChildByName("pauseButton");
-        pauseButton.x = 512 - 80 * uiScale;
+        this.pauseButton.node.x = 512 - 80 * uiScale;
         this.cat.node.y = -14;
         this.cat.node.x = .5 * -this.topUI.width + 20 + .5 * this.cat.node.width;
         var wallpaper = this.scaleContainer.getChildByName("wallpaper");
         wallpaper.y = -this.scaleContainer.height / 2;
         wallpaper.height = this.scaleContainer.height - TOP_AREA_HEIGHT * uiScale;
-        this.gameBoardContainer.scale = gameBoardMaxSide / (9 * TILE_SIZE);
-        this.gameBoardContainer.height = 9 * TILE_SIZE;
-        this.gameBoardContainer.width = 9 * TILE_SIZE;
-        this.gameBoardContainer.y = (BOT_AREA_HEIGHT - TOP_AREA_HEIGHT - this.topUI.height + TOPBG_TOP_MARGIN + TOPBG_BOT_MARGIN) * uiScale * .5 + TILE_SIZE / 2 * this.gameBoardContainer.scale;
+        var MAX_SIZE_OF_BOARD = 9;
+        this.gameBoardContainer.scale = gameBoardMaxSide / (TILE_SIZE * MAX_SIZE_OF_BOARD);
+        this.gameBoardContainer.width = TILE_SIZE * MAX_SIZE_OF_BOARD;
+        this.gameBoardContainer.height = TILE_SIZE * MAX_SIZE_OF_BOARD;
+        this.gameBoardContainer.y = (BOT_AREA_HEIGHT - TOP_AREA_HEIGHT - this.topUI.height + TOPBG_TOP_MARGIN + TOPBG_BOT_MARGIN) * uiScale * .5;
         this.bottomUI.y = -this.scaleContainer.height / 2;
         this.boosterFrame.scale = uiScale;
         this.boosterOverlay.height = (this.scaleContainer.height + 300) / uiScale;
@@ -4280,6 +4540,9 @@ window.__require = function e(t, n, r) {
         setTimeout(function() {
           _this2.gameBoard.checkMatchesRequest = true;
         }, 400);
+      },
+      onPauseClicked: function onPauseClicked() {
+        this.pausePopup.show(true);
       }
     });
     cc._RF.pop();
@@ -4650,6 +4913,18 @@ window.__require = function e(t, n, r) {
           default: null,
           type: cc.SpriteFrame
         },
+        crateBrick1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        shrub1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        mouseDoor: {
+          default: null,
+          type: cc.SpriteFrame
+        },
         movableDestructible1: {
           default: null,
           type: cc.SpriteFrame
@@ -4686,6 +4961,109 @@ window.__require = function e(t, n, r) {
     });
     cc._RF.pop();
   }, {} ],
+  PausePopup: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "eb7f8TDrj1N878CcvbpZ0ee", "PausePopup");
+    "use strict";
+    var _userState = _interopRequireDefault(require("../userState"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
+    var EMPTY_METHOD = function EMPTY_METHOD() {};
+    var ANIMATION_DURATION = .3;
+    cc.Class({
+      extends: cc.Component,
+      properties: {},
+      onLoad: function onLoad() {
+        this.app = cc.find("app").getComponent("app");
+        this.home = cc.find("Canvas").getComponent("Home");
+        this.popup = this.node.getChildByName("popup");
+        var QAButton = this.popup.getChildByName("QAButton").getComponent("cc.Button");
+        var closeButton = this.popup.getChildByName("closeButton").getComponent("cc.Button");
+        var content = this.popup.getChildByName("content");
+        this.musicSlider = content.getChildByName("musicSlider");
+        this.sfxSlider = content.getChildByName("sfxSlider");
+        var backButton = content.getChildByName("backButton").getComponent("cc.Button");
+        var restartButton = content.getChildByName("restartButton").getComponent("cc.Button");
+        var homeButton = content.getChildByName("homeButton").getComponent("cc.Button");
+        closeButton.node.on("click", this.onCloseClicked, this);
+        backButton.node.on("click", this.onCloseClicked, this);
+        restartButton.node.on("click", this.onRestartClicked, this);
+        homeButton.node.on("click", this.onHomeClicked, this);
+        this.node.active = false;
+      },
+      init: function init(options) {
+        this.onHomeCb = options.onHome || EMPTY_METHOD;
+        this.onRestartCb = options.onRestart || EMPTY_METHOD;
+      },
+      show: function show(animate) {
+        var _this = this;
+        void 0 === animate && (animate = false);
+        this.popup = this.node.getChildByName("popup");
+        var settings = _userState["default"].getSettings();
+        this.isShowing = true;
+        this.node.active = true;
+        this.musicSlider.getComponent("cc.Slider").progress = settings.music;
+        this.sfxSlider.getComponent("cc.Slider").progress = settings.sfx;
+        this.musicSlider.getComponent("Slider").onValueChanged();
+        this.sfxSlider.getComponent("Slider").onValueChanged();
+        if (animate) {
+          this.animating = true;
+          cc.tween(this.node).to(ANIMATION_DURATION, {
+            opacity: 255
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this.animating = false;
+          }).start();
+        } else this.node.opacity = 255;
+      },
+      hide: function hide(animate) {
+        var _this2 = this;
+        void 0 === animate && (animate = false);
+        this.isShowing = false;
+        if (animate) {
+          this.animating = true;
+          cc.tween(this.node).to(ANIMATION_DURATION, {
+            opacity: 0
+          }, {
+            easing: "quadOut"
+          }).call(function() {
+            _this2.node.active = false;
+            _this2.animating = false;
+          }).start();
+        } else {
+          this.node.active = false;
+          this.node.opacity = 0;
+        }
+      },
+      onCloseClicked: function onCloseClicked(animate) {
+        void 0 === animate && (animate = false);
+        if (this.animating) return;
+        this.hide(true);
+        _userState["default"].saveSettings({
+          music: this.musicSlider.getComponent("cc.Slider").progress,
+          sfx: this.sfxSlider.getComponent("cc.Slider").progress
+        });
+      },
+      onRestartClicked: function onRestartClicked() {
+        if (this.animating) return;
+        this.hide(true);
+        this.onRestartCb();
+      },
+      onHomeClicked: function onHomeClicked() {
+        if (this.animating) return;
+        this.hide(true);
+        this.onHomeCb();
+      },
+      updateScreenSize: function updateScreenSize(frame, uiScale) {}
+    });
+    cc._RF.pop();
+  }, {
+    "../userState": "userState"
+  } ],
   ProgressFrame: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "e4cb9a+bv9N0KTzW4rfXiVG", "ProgressFrame");
@@ -5594,6 +5972,12 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "dae3dWTqFpHd66ekGC8OnEu", "SettingsPopup");
     "use strict";
+    var _userState = _interopRequireDefault(require("../userState"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
     var ANIMATION_DURATION = .3;
     cc.Class({
       extends: cc.Component,
@@ -5602,15 +5986,27 @@ window.__require = function e(t, n, r) {
         this.app = cc.find("app").getComponent("app");
         this.home = cc.find("Canvas").getComponent("Home");
         this.popup = this.node.getChildByName("popup");
-        this.QAButton = this.popup.getChildByName("QAButton");
-        this.QAButton.active = this.app.IS_DEVELOPMENT;
+        var QAButton = this.popup.getChildByName("QAButton").getComponent("cc.Button");
+        var closeButton = this.popup.getChildByName("closeButton").getComponent("cc.Button");
+        var content = this.popup.getChildByName("content");
+        this.musicSlider = content.getChildByName("musicSlider");
+        this.sfxSlider = content.getChildByName("sfxSlider");
+        QAButton.node.active = this.app.IS_DEVELOPMENT;
+        QAButton.node.on("click", this.onQAButtonClicked, this);
+        closeButton.node.on("click", this.onCloseClicked, this);
       },
       show: function show(animate) {
         var _this = this;
         void 0 === animate && (animate = false);
+        this.popup = this.node.getChildByName("popup");
+        var settings = _userState["default"].getSettings();
+        this.node.active = true;
+        this.musicSlider.getComponent("cc.Slider").progress = settings.music;
+        this.sfxSlider.getComponent("cc.Slider").progress = settings.sfx;
+        this.musicSlider.getComponent("Slider").onValueChanged();
+        this.sfxSlider.getComponent("Slider").onValueChanged();
         if (animate) {
           this.animating = true;
-          this.node.active = true;
           cc.tween(this.node).to(ANIMATION_DURATION, {
             opacity: 255
           }, {
@@ -5618,10 +6014,7 @@ window.__require = function e(t, n, r) {
           }).call(function() {
             _this.animating = false;
           }).start();
-        } else {
-          this.node.active = true;
-          this.node.opacity = 255;
-        }
+        } else this.node.opacity = 255;
       },
       hide: function hide(animate) {
         var _this2 = this;
@@ -5650,15 +6043,21 @@ window.__require = function e(t, n, r) {
           }, ANIMATION_DURATION);
         }
       },
-      onHideClicked: function onHideClicked(animate) {
+      onCloseClicked: function onCloseClicked(animate) {
         void 0 === animate && (animate = false);
         if (this.animating) return;
         this.hide(true);
+        _userState["default"].saveSettings({
+          music: this.musicSlider.getComponent("cc.Slider").progress,
+          sfx: this.sfxSlider.getComponent("cc.Slider").progress
+        });
       },
       updateScreenSize: function updateScreenSize(frame, uiScale) {}
     });
     cc._RF.pop();
-  }, {} ],
+  }, {
+    "../userState": "userState"
+  } ],
   ShopCommands: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "0c787lQU21J+pMIP85tVoEo", "ShopCommands");
@@ -5767,6 +6166,7 @@ window.__require = function e(t, n, r) {
         }
       },
       onLoad: function onLoad() {
+        this.app = cc.find("app").getComponent("app");
         this.popup = this.node.getChildByName("popup");
         this.notEnoughCoinFrame = this.node.getChildByName("notEnoughCoin");
         var buyButton = this.popup.getChildByName("buyButton");
@@ -6068,6 +6468,24 @@ window.__require = function e(t, n, r) {
     "../../staticData/shop": "shop",
     "../../userState": "userState"
   } ],
+  Slider: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "8ac23lCB2xKhZ1lBn7KpAT4", "Slider");
+    "use strict";
+    cc.Class({
+      extends: cc.Component,
+      properties: {},
+      onLoad: function onLoad() {
+        this.slider = this.node.getComponent(cc.Slider);
+        this.mask = this.node.getChildByName("Mask");
+        this.slider.node.on("slide", this.onValueChanged, this);
+      },
+      onValueChanged: function onValueChanged() {
+        this.mask.width = this.node.width * this.slider.progress;
+      }
+    });
+    cc._RF.pop();
+  }, {} ],
   SpriteCollection: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "ddfeeBQralOx5laFJGHa65b", "SpriteCollection");
@@ -7515,6 +7933,175 @@ window.__require = function e(t, n, r) {
     module.exports = exports["default"];
     cc._RF.pop();
   }, {} ],
+  bumper: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "7f4bfdkpMhCc4mclTjIwv/I", "bumper");
+    "use strict";
+    exports.__esModule = true;
+    exports["default"] = void 0;
+    var _constants = _interopRequireDefault(require("../../constants.js"));
+    var _helpers = _interopRequireDefault(require("../../helpers.js"));
+    var _tweenFunctions = _interopRequireDefault(require("tween-functions"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
+    var _constants$GAMEPLAY = _constants["default"].GAMEPLAY, Z_INDEX = _constants$GAMEPLAY.Z_INDEX, TILE_SIZE = _constants$GAMEPLAY.TILE_SIZE;
+    var DOOR_OPENING_DURATION = 200;
+    var DOOR_CLOSING_DURATION = 300;
+    var DOOR_REMAINS_OPEN_DURATION = 500;
+    var MOUSE_APPEAR_DURATION = 100;
+    var MOUSE_DISAPPEAR_AFTER = 800;
+    var MOUSE_DISAPPEAR_DURATION = 250;
+    var MOUSE_BACK_MOVEMENT_DURATION = 325;
+    var MOUSE_SPEED = 7e3;
+    var MOUSE_ANIMATION_STEP = {
+      OPEN: "open",
+      MOUSE: "mouse",
+      CLOSE: "close"
+    };
+    var bumper = {
+      properties: {
+        doorClosed: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        doorOpened: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        mouse: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      is: function is(type) {
+        return "mouseDoor" === type;
+      },
+      init: function init(that, options) {
+        that.isBlockingCascade = true;
+        that.isSensitive = true;
+        that.node.zIndex = Z_INDEX.BLOCKER_ITEM;
+        var type = options.type;
+        switch (type) {
+         case "mouseDoor":
+          that._addLayers({
+            doorOpened: that.doorOpened
+          });
+          that._addLayers({
+            doorClosed: that.doorClosed
+          });
+        }
+        that.layers.doorOpened.active = true;
+        that.currentLayerId = "doorClosed";
+      },
+      gotHit: function gotHit(that, reason, resolve) {
+        bumper["gotHit_" + that.type](that, reason, resolve);
+      },
+      gotHit_mouseDoor: function gotHit_mouseDoor(that, reason, resolve) {
+        that.onUpdate || (that.onUpdate = {});
+        var newResolve = function newResolve() {
+          that.onDestroyCb && that.onDestroyCb(that.type);
+          resolve();
+        };
+        if (that.onUpdate.hitInProgress) {
+          var _data = that.onUpdate.hitInProgress.data;
+          _data.mousesRemaining++;
+          if (_data.animationStep === MOUSE_ANIMATION_STEP.CLOSE) {
+            _data.animationStep = MOUSE_ANIMATION_STEP.OPEN;
+            _data.nextAnimationStep = that.app.now + DOOR_OPENING_DURATION / 100 * (100 - _data.doorOpeningPercentage);
+          } else _data.animationStep === MOUSE_ANIMATION_STEP.MOUSE && (_data.nextAnimationStep = Math.min(that.app.now + 200, _data.nextAnimationStep));
+          _data.resolveList.push(newResolve);
+          return;
+        }
+        that.layers.doorOpened.active = true;
+        var data = {
+          doorOpeningPercentage: 0,
+          animationStep: MOUSE_ANIMATION_STEP.OPEN,
+          mousesRemaining: 1,
+          animationStart: that.app.now,
+          nextAnimationStep: that.app.now + DOOR_OPENING_DURATION,
+          resolveList: [ newResolve ]
+        };
+        var update = function update(dt, data) {
+          if (that.app.now >= data.nextAnimationStep) {
+            if (data.animationStep === MOUSE_ANIMATION_STEP.OPEN) {
+              that.layers.doorClosed.opacity = 0;
+              data.animationStep = MOUSE_ANIMATION_STEP.MOUSE;
+            } else if (data.animationStep === MOUSE_ANIMATION_STEP.CLOSE) {
+              that.layers.doorClosed.opacity = 255;
+              that.layers.doorOpened.active = false;
+              delete that.onUpdate.hitInProgress;
+              that._onUpdateCleanup();
+              return;
+            }
+            if (data.animationStep === MOUSE_ANIMATION_STEP.MOUSE) if (data.mousesRemaining < 1) {
+              data.animationStep = MOUSE_ANIMATION_STEP.CLOSE;
+              data.nextAnimationStep = that.app.now + DOOR_CLOSING_DURATION;
+              data.animationStart = that.app.now;
+            } else {
+              bumper.createMouse(that, data.resolveList.shift(1));
+              data.mousesRemaining--;
+              data.mousesRemaining > 0 ? data.nextAnimationStep = that.app.now + 200 : data.nextAnimationStep = that.app.now + DOOR_REMAINS_OPEN_DURATION;
+            }
+          }
+          if (data.animationStep === MOUSE_ANIMATION_STEP.OPEN || data.animationStep === MOUSE_ANIMATION_STEP.CLOSE) {
+            data.doorOpeningPercentage = Math.min(1, (that.app.now - data.animationStart) / (data.nextAnimationStep - data.animationStart));
+            var opacity = data.animationStep === MOUSE_ANIMATION_STEP.OPEN ? 1 - data.doorOpeningPercentage : data.doorOpeningPercentage;
+            that.layers.doorClosed.opacity = 255 * opacity;
+          }
+        };
+        that.onUpdate.hitInProgress = {
+          data: data,
+          update: update
+        };
+      },
+      createMouse: function createMouse(that, resolve) {
+        var gameBoard = that.gameBoard;
+        var startX = gameBoard.boardXToViewX(that.boardX);
+        var node = _helpers["default"].createSprite({
+          spriteFrame: that.mouse,
+          view: gameBoard.view,
+          zIndex: Z_INDEX.FLYING_MISSILE,
+          x: startX,
+          y: gameBoard.boardYToViewY(that.boardY) - .09 * TILE_SIZE,
+          width: .8 * TILE_SIZE,
+          height: .8 * TILE_SIZE
+        });
+        node.opacity = 0;
+        gameBoard.movingSprites.push({
+          onTick: function onTick(data, dt) {
+            var progress = gameBoard.app.now - data.startTime;
+            node.opacity = progress < MOUSE_APPEAR_DURATION ? progress / MOUSE_APPEAR_DURATION * 255 : 255;
+            var maxDeltaX = dt * MOUSE_SPEED;
+            var tweenDeltax = data.startX + _tweenFunctions["default"].easeInBack(progress, 0, 3 * TILE_SIZE, MOUSE_BACK_MOVEMENT_DURATION) - node.x;
+            node.x += Math.min(maxDeltaX, tweenDeltax);
+            if (progress > MOUSE_DISAPPEAR_AFTER) {
+              node.opacity = Math.max(0, MOUSE_DISAPPEAR_AFTER + MOUSE_DISAPPEAR_DURATION - progress) / MOUSE_DISAPPEAR_DURATION * 255;
+              if (0 === node.opacity) {
+                node.parent.removeChild(node);
+                node.destroy();
+                _helpers["default"].removeFromArray(data, gameBoard.movingSprites);
+                data.resolve();
+              }
+            }
+          },
+          startTime: gameBoard.app.now,
+          startX: startX,
+          resolve: resolve
+        });
+      }
+    };
+    var _default = bumper;
+    exports["default"] = _default;
+    module.exports = exports["default"];
+    cc._RF.pop();
+  }, {
+    "../../constants.js": "constants",
+    "../../helpers.js": "helpers",
+    "tween-functions": 3
+  } ],
   cats: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "cbcddRbkZRO5bc8eg13jjFA", "cats");
@@ -7642,6 +8229,11 @@ window.__require = function e(t, n, r) {
           cratePurple1: "cratePurple1",
           cratePurple2: "cratePurple2",
           cratePurple3: "cratePurple3",
+          crateBrick1: "crateBrick1",
+          crateBrick2: "crateBrick2",
+          shrub1: "shrub1",
+          shrub2: "shrub2",
+          mouseDoor: "mouseDoor",
           movableDestructible1: "movableDestructible1"
         },
         ITEM_SHATTER_COLOR: {
@@ -7660,16 +8252,21 @@ window.__require = function e(t, n, r) {
         },
         Z_INDEX: {
           BACKGROUND: 0,
-          BLOCKER_ITEM: 1,
-          ITEM: 2,
-          BORDER: 3,
-          FLYING_MISSILE: 4,
-          DISCOBALL_ROTATING: 5,
-          DISOBALL_RAY_OF_LIGHT: 6,
-          FLYING_SNIPER: 7,
-          ITEM_SHATTER: 8,
-          EXPLODING_BOMB: 9,
-          BOOSTER_PROJECTILE: 10
+          UNDERLAY_ITEM1: 1,
+          UNDERLAY_ITEM2: 2,
+          UNDERLAY_ITEM3: 3,
+          UNDERLAY_ITEM4: 4,
+          UNDERLAY_ITEM5: 5,
+          BLOCKER_ITEM: 6,
+          ITEM: 7,
+          BORDER: 8,
+          FLYING_MISSILE: 9,
+          DISCOBALL_ROTATING: 10,
+          DISOBALL_RAY_OF_LIGHT: 11,
+          FLYING_SNIPER: 12,
+          ITEM_SHATTER: 13,
+          EXPLODING_BOMB: 14,
+          BOOSTER_PROJECTILE: 15
         },
         SPINE_NAMES: {
           rocketSkinRight: "Rocket_Right",
@@ -7877,8 +8474,13 @@ window.__require = function e(t, n, r) {
     var q = "cratePurple1";
     var u = "cratePurple2";
     var v = "cratePurple3";
+    var w = "crateBrick1";
+    var C = "crateBrick2";
+    var E = "shrub1";
+    var F = "shrub2";
+    var G = "mouseDoor";
     var t = "movableDestructible1";
-    var levelsOrder = [ "4", "999991", "6", "7", "8", "9", "10", "5", "11", "12", "13" ];
+    var levelsOrder = [ "4", "6", "7", "8", "9", "10", "5", "11", "12", "13", "14", "15", "16", "17" ];
     exports.levelsOrder = levelsOrder;
     var _default = {
       1: {
@@ -8061,27 +8663,61 @@ window.__require = function e(t, n, r) {
           amount: 12
         } ],
         rewards: {
-          supply: "plushDfeatherToyoll"
+          supply: "featherToy"
         },
         turns: 20,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
         pattern: [ [ O, O, X, O, t, O, X, O, O ], [ O, O, X, O, t, O, X, O, O ], [ O, r, X, g, t, b, X, g, O ], [ O, y, X, g, t, b, X, r, O ], [ O, b, X, r, t, y, X, r, O ], [ O, g, X, g, t, r, X, b, O ], [ O, O, O, O, O, O, O, O, O ], [ y, r, y, r, r, y, b, r, b ], [ O, b, r, g, g, b, r, b, O ] ]
       },
-      999990: {
+      14: {
         isDebug: true,
         objectives: [ {
-          type: r,
-          amount: 9999
+          type: a,
+          amount: 9
         }, {
-          type: y,
-          amount: 9999
+          type: i,
+          amount: 9
         }, {
-          type: g,
-          amount: 9999
+          type: l,
+          amount: 9
+        } ],
+        turns: 999,
+        spawnPattern: [ A, A, A, A, A, A, A, A, A ],
+        pattern: [ [ a, e, q, b, r, y, l, i, x ], [ a, e, q, y, g, b, l, i, x ], [ a, e, q, b, r, D, l, i, x ], [ a, e, q, y, g, b, l, i, x ], [ a, e, q, D, r, y, l, i, x ], [ c, f, u, y, g, b, n, j, X ], [ c, f, u, b, r, y, n, j, X ], [ d, h, v, y, g, b, o, k, z ], [ d, h, v, b, r, y, o, k, z ] ]
+      },
+      15: {
+        isDebug: true,
+        objectives: [ {
+          type: w,
+          amount: 15
         } ],
         turns: 999,
         spawnPattern: [ R, R, R, R, R, R, R, R, R ],
-        pattern: [ [ r, y, g, b, r, y, g, b, r ], [ g, b, r, y, g, b, r, y, g ], [ r, y, g, b, r, D, g, b, r ], [ g, b, r, y, g, b, r, D, g ], [ r, y, g, D, r, y, g, b, r ], [ g, b, r, y, g, b, r, y, g ], [ r, y, D, b, r, y, g, b, r ], [ g, b, r, y, g, b, r, y, g ], [ r, y, g, b, r, y, g, b, r ] ]
+        pattern: [ [ O, O, g, b, y, b, g, O, O ], [ O, g, b, y, g, y, b, r, O ], [ C, g, y, b, r, g, y, g, C ], [ C, b, y, r, y, g, r, b, C ], [ C, y, b, g, g, r, g, y, C ], [ C, C, C, C, C, C, C, C, C ], [ g, y, g, b, r, y, b, r, b ], [ b, b, g, y, b, g, y, g, y ] ]
+      },
+      16: {
+        isDebug: true,
+        objectives: [ {
+          type: w,
+          amount: 9
+        }, {
+          type: E,
+          amount: 63
+        } ],
+        turns: 35,
+        spawnPattern: [ R, R, R, R, R, R, R, R, R ],
+        pattern: [ [ b, y, g, b, y, y, g, y, b ], [ g, g, b, g, y, b, y, y, g ], [ C, C, C, C, C, C, C, C, C ], [ y, g, y, b, r, g, y, g, y ], [ r, b, y, r, y, m, r, b, b ], [ b, y, b, g, M, r, g, y, g ], [ b, y, g, b, y, b, g, y, b ], [ g, g, b, y, B, y, B, r, g ], [ M, g, y, b, r, g, y, g, y ] ],
+        underlayPattern: [ [ O, O, O, O, O, O, O, O, O ], [ O, O, O, O, O, O, O, O, O ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ] ]
+      },
+      17: {
+        isDebug: true,
+        objectives: [ {
+          type: G,
+          amount: 100
+        } ],
+        turns: 35,
+        spawnPattern: [ R, R, R, R, R, R, R, R, R ],
+        pattern: [ [ G, y, g, b, y, s, g, y, G ], [ G, g, b, y, g, y, b, y, G ], [ G, g, y, b, r, g, y, g, G ], [ r, b, y, m, y, g, r, b, r ], [ g, y, b, m, g, s, g, y, g ], [ r, b, y, m, y, g, r, b, r ], [ g, y, g, m, r, y, b, r, b ], [ b, b, g, y, b, g, y, g, y ], [ G, G, G, G, G, G, G, G, G ] ]
       },
       999991: {
         isDebug: true,
@@ -8130,6 +8766,30 @@ window.__require = function e(t, n, r) {
         turns: 999,
         spawnPattern: [ A, A, A, A, A, A ],
         pattern: [ [ A, A, A, A, A, A ], [ z, z, z, z, z, z ], [ z, z, z, z, z, z ], [ z, z, z, z, z, z ], [ z, z, z, z, z, z ], [ z, z, z, z, z, z ] ]
+      },
+      999994: {
+        isDebug: true,
+        objectives: [ {
+          type: w,
+          amount: 9
+        }, {
+          type: E,
+          amount: 63
+        } ],
+        turns: 35,
+        spawnPattern: [ R, R, R, R, R, R, R, R, R ],
+        pattern: [ [ b, y, g, b, y, y, g, y, b ], [ g, g, b, g, y, b, y, y, g ], [ C, C, C, C, C, C, C, C, C ], [ y, g, y, b, r, g, y, g, y ], [ r, b, y, r, y, m, r, b, b ], [ b, y, b, g, M, r, g, y, g ], [ b, y, g, b, y, b, g, y, b ], [ g, g, b, y, B, y, B, r, g ], [ M, g, y, b, r, g, y, g, y ] ],
+        underlayPattern: [ [ O, O, O, O, O, O, O, O, O ], [ O, O, O, O, O, O, O, O, O ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ], [ F, F, F, F, F, F, F, F, F ] ]
+      },
+      999990: {
+        isDebug: true,
+        objectives: [ {
+          type: G,
+          amount: 1e4
+        } ],
+        turns: 999,
+        spawnPattern: [ R, R, R, R, R, R, R, R, R ],
+        pattern: [ [ G, y, g, b, y, s, g, y, G ], [ G, g, b, y, g, y, b, y, G ], [ G, g, y, b, r, g, y, g, G ], [ r, b, y, m, y, g, r, b, r ], [ g, y, b, m, g, s, g, y, g ], [ r, b, y, m, y, g, r, b, r ], [ g, y, g, m, r, y, b, r, b ], [ b, b, g, y, b, g, y, g, y ], [ G, G, G, G, G, G, G, G, G ] ]
       }
     };
     exports["default"] = _default;
@@ -8228,7 +8888,8 @@ window.__require = function e(t, n, r) {
       Yellow: ":basic2",
       Green: ":basic3",
       Blue: ":basic4",
-      Purple: ":basic5"
+      Purple: ":basic5",
+      Brick: null
     };
     var simpleCrate = {
       properties: {
@@ -8303,10 +8964,18 @@ window.__require = function e(t, n, r) {
         cratePurple3: {
           default: null,
           type: cc.SpriteFrame
+        },
+        crateBrick1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        crateBrick2: {
+          default: null,
+          type: cc.SpriteFrame
         }
       },
       is: function is(type) {
-        return "crateBrown1" === type || "crateBrown2" === type || "crateBrown3" === type || "crateRed1" === type || "crateRed2" === type || "crateRed3" === type || "crateYellow1" === type || "crateYellow2" === type || "crateYellow3" === type || "crateGreen1" === type || "crateGreen2" === type || "crateGreen3" === type || "crateBlue1" === type || "crateBlue2" === type || "crateBlue3" === type || "cratePurple1" === type || "cratePurple2" === type || "cratePurple3" === type;
+        return "crateBrown1" === type || "crateBrown2" === type || "crateBrown3" === type || "crateRed1" === type || "crateRed2" === type || "crateRed3" === type || "crateYellow1" === type || "crateYellow2" === type || "crateYellow3" === type || "crateGreen1" === type || "crateGreen2" === type || "crateGreen3" === type || "crateBlue1" === type || "crateBlue2" === type || "crateBlue3" === type || "cratePurple1" === type || "cratePurple2" === type || "cratePurple3" === type || "crateBrick1" === type || "crateBrick2" === type;
       },
       init: function init(that, options) {
         that.isBlockingCascade = true;
@@ -8331,6 +9000,7 @@ window.__require = function e(t, n, r) {
             1: that["crate" + color + "1"],
             2: that["crate" + color + "2"]
           });
+          that.layers["1"].active = false;
           that.currentLayerId = "2";
           break;
 
@@ -8341,18 +9011,21 @@ window.__require = function e(t, n, r) {
             2: that["crate" + color + "2"],
             3: that["crate" + color + "3"]
           });
+          that.layers["1"].active = false;
+          that.layers["2"].active = false;
           that.currentLayerId = "3";
         }
       },
       gotHit: function gotHit(that, reason, resolve) {
         var color = that.simpleCrateData.color;
-        if (COLOR_SENSITIVITY[color] && "sensitive:" === reason.slice(0, 10) && reason.slice(-7) !== COLOR_SENSITIVITY[color]) return resolve();
+        if (void 0 !== COLOR_SENSITIVITY[color] && "sensitive:" === reason.slice(0, 10) && reason.slice(-7) !== COLOR_SENSITIVITY[color]) return resolve();
         that.onUpdate && that.onUpdate.shaking && that.onUpdate.shaking.data.resolve();
         that.lifePoints--;
         that._checkLifePoints();
         if (0 === that.lifePoints) return that._defaultExplode(reason, resolve);
         that.type = "crate" + color + that.lifePoints;
         that.currentLayerId = that.lifePoints;
+        that.layers[that.currentLayerId].active = true;
         that.onUpdate || (that.onUpdate = {});
         that.onUpdate.shaking = {
           data: {
@@ -8405,6 +9078,108 @@ window.__require = function e(t, n, r) {
     });
     cc._RF.pop();
   }, {} ],
+  underlay: [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "c3d9dNyxtdLaqpqhO+C2BgA", "underlay");
+    "use strict";
+    exports.__esModule = true;
+    exports["default"] = void 0;
+    var _constants = _interopRequireDefault(require("../../constants.js"));
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        default: obj
+      };
+    }
+    var Z_INDEX = _constants["default"].GAMEPLAY.Z_INDEX;
+    var UNDERLAY_TILE_SIZE = 270;
+    var SHAKE_DURATION = 300;
+    var underlay = {
+      properties: {
+        shrub1: {
+          default: null,
+          type: cc.SpriteFrame
+        },
+        shrub2: {
+          default: null,
+          type: cc.SpriteFrame
+        }
+      },
+      is: function is(type) {
+        return "shrub1" === type || "shrub2" === type;
+      },
+      init: function init(that, options) {
+        that.node.zIndex = Z_INDEX["UNDERLAY_ITEM" + (Math.floor(5 * Math.random()) + 1)];
+        var type = options.type;
+        var subType = type.substring(0, type.length - 1);
+        that.underlayData = {
+          subType: subType
+        };
+        switch (type) {
+         case subType + "1":
+          that._addLayers({
+            1: that[subType + "1"]
+          });
+          that.currentLayerId = "1";
+          break;
+
+         case subType + "2":
+          that.lifePoints = 2;
+          that._addLayers({
+            1: that[subType + "1"],
+            2: that[subType + "2"]
+          });
+          that.layers["1"].active = false;
+          that.currentLayerId = "2";
+        }
+        for (var i = 1; i <= 2; i++) {
+          if (!that.layers[i]) continue;
+          that.layers[i].width = UNDERLAY_TILE_SIZE;
+          that.layers[i].height = UNDERLAY_TILE_SIZE;
+          that.layers[i].angle = 90 * Math.floor(4 * Math.random());
+        }
+      },
+      gotHit: function gotHit(that, reason, resolve) {
+        that.onUpdate && that.onUpdate.shaking && that.onUpdate.shaking.data.resolve();
+        that.lifePoints--;
+        that._checkLifePoints();
+        if (0 === that.lifePoints) return that._defaultExplode(reason, resolve);
+        that.type = "" + that.underlayData.subType + that.lifePoints;
+        that.currentLayerId = that.lifePoints;
+        that.layers[that.currentLayerId].active = true;
+        that.onUpdate || (that.onUpdate = {});
+        that.onUpdate.shaking = {
+          data: {
+            shakeUntil: that.app.now + SHAKE_DURATION,
+            resolve: function resolve() {
+              that.node.angle = 0;
+              var hp = that.lifePoints;
+              that.layers[hp].x = that.layers[hp + 1].x = 0;
+              that.layers[hp].y = that.layers[hp + 1].y = 0;
+              that.layers[hp + 1].destroy();
+              delete that.layers[hp + 1];
+              delete that.onUpdate.shaking;
+              that._onUpdateCleanup();
+            }
+          },
+          update: function update(dt, data) {
+            if (that.app.now >= data.shakeUntil) return data.resolve();
+            var hp = that.lifePoints;
+            that.node.angle = 7 * that.app.noise.noise2D(that.app.now / 100, 10 * that.uid);
+            that.layers[hp + 1].x = that.layers[hp].x = 7 * that.app.noise.noise2D(that.app.now / 100, 20 * that.uid);
+            that.layers[hp + 1].y = that.layers[hp].y = 7 * that.app.noise.noise2D(that.app.now / 100, 30 * that.uid);
+            that.layers[hp + 1].opacity = (data.shakeUntil - that.app.now) / SHAKE_DURATION * 256;
+          }
+        };
+        resolve();
+      }
+    };
+    var _default = underlay;
+    exports["default"] = _default;
+    module.exports = exports["default"];
+    cc._RF.pop();
+  }, {
+    "../../constants.js": "constants"
+  } ],
   userState: [ function(require, module, exports) {
     "use strict";
     cc._RF.push(module, "cdc8d8RhNRBCLNThbisByEb", "userState");
@@ -8555,6 +9330,22 @@ window.__require = function e(t, n, r) {
     function saveCatsState() {
       localStorage.setItem("userState.catStates", JSON.stringify(catStates));
     }
+    var defaultSettings = {
+      music: 1,
+      sfx: 1
+    };
+    function getSettings() {
+      var dataString = localStorage.getItem("userState.settings");
+      var data = {};
+      if (dataString) data = JSON.parse(dataString); else {
+        data = defaultSettings;
+        saveSettings(data);
+      }
+      return data;
+    }
+    function saveSettings(data) {
+      localStorage.setItem("userState.settings", JSON.stringify(data));
+    }
     var defaultYardData = {
       tunnel: {
         x: 9,
@@ -8615,6 +9406,8 @@ window.__require = function e(t, n, r) {
       localStorage.clear();
     }
     var _default = {
+      getSettings: getSettings,
+      saveSettings: saveSettings,
       getCoin: getCoin,
       updateCoin: updateCoin,
       getFish: getFish,
@@ -8947,4 +9740,4 @@ window.__require = function e(t, n, r) {
     module.exports = exports["default"];
     cc._RF.pop();
   }, {} ]
-}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "CatView", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "StartSelectionItem", "StartSelectionPopup", "SubsceneController", "TopUI", "YardGlow", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "simpleCrate", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "boosters", "cats", "levels", "shop", "yard", "userState" ]);
+}, {}, [ "Scheduler", "app", "ShopCommands", "constants", "BagBoosterItem", "BagSupplyItem", "BoosterController", "BoosterItem", "BottomUI", "BottomUIButton", "CatView", "ConfirmationController", "ObjectiveController", "ObjectiveItem", "PausePopup", "ProgressFrame", "QAPanel", "ResultController", "SettingsPopup", "ShopConfirmPopup", "ShopItem", "Slider", "StartSelectionItem", "StartSelectionPopup", "SubsceneController", "TopUI", "YardGlow", "YardItem", "YardView", "spinner", "BagSubscene", "CatSubscene", "HomeSubscene", "ShopSubscene", "Debugger", "GameBoard", "GameItem", "bumper", "simpleCrate", "underlay", "GameTile", "Rnd", "SpriteCollection", "helpers", "levelModel", "yardModel", "Game", "Home", "boosters", "cats", "levels", "shop", "yard", "userState" ]);
