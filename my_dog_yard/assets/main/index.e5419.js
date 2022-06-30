@@ -10399,7 +10399,7 @@ window.__require = function e(t, n, r) {
     var ONE_DAY = 24 * ONE_HOUR;
     var TEST_LEVEL = null;
     var SKIP_SELECTION_POPUP = false;
-    var FEEDING_ENVIRONMENT = true;
+    var FEEDING_ENVIRONMENT = false;
     var DYNAMIC_USER_INTERACTION = true;
     var DEBUG = {
       TEST_LEVEL: TEST_LEVEL,
