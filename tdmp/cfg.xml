@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<SaveCFG xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <data>
+    <ResourceConfiguration>
+      <Name>HP</Name>
+      <initialValue>100</initialValue>
+      <maxValue>100</maxValue>
+      <autoRefill>0</autoRefill>
+      <maxAutoRefill>0</maxAutoRefill>
+      <refillMode>Linear</refillMode>
+      <ComsumingPhases />
+    </ResourceConfiguration>
+    <ResourceConfiguration>
+      <Name>Shield</Name>
+      <initialValue>100</initialValue>
+      <maxValue>100</maxValue>
+      <autoRefill>0</autoRefill>
+      <maxAutoRefill>0</maxAutoRefill>
+      <refillMode>Linear</refillMode>
+      <ComsumingPhases />
+    </ResourceConfiguration>
+    <ResourceConfiguration>
+      <Name>AmmoAR</Name>
+      <initialValue>100</initialValue>
+      <maxValue>100</maxValue>
+      <autoRefill>0</autoRefill>
+      <maxAutoRefill>0</maxAutoRefill>
+      <refillMode>Linear</refillMode>
+      <ComsumingPhases />
+    </ResourceConfiguration>
+    <ResourceConfiguration>
+      <Name>AmmoShotgun</Name>
+      <initialValue>200</initialValue>
+      <maxValue>200</maxValue>
+      <autoRefill>0</autoRefill>
+      <maxAutoRefill>0</maxAutoRefill>
+      <refillMode>Linear</refillMode>
+      <ComsumingPhases />
+    </ResourceConfiguration>
+    <ResourceConfiguration>
+      <Name>ManaMelee</Name>
+      <initialValue>300</initialValue>
+      <maxValue>300</maxValue>
+      <autoRefill>5</autoRefill>
+      <maxAutoRefill>100</maxAutoRefill>
+      <refillMode>Bursts</refillMode>
+      <ComsumingPhases>
+        <int>20</int>
+        <int>30</int>
+        <int>40</int>
+      </ComsumingPhases>
+    </ResourceConfiguration>
+    <ResourceConfiguration>
+      <Name>ManaDash</Name>
+      <initialValue>100</initialValue>
+      <maxValue>100</maxValue>
+      <autoRefill>10</autoRefill>
+      <maxAutoRefill>100</maxAutoRefill>
+      <refillMode>Linear</refillMode>
+      <ComsumingPhases>
+        <int>40</int>
+      </ComsumingPhases>
+    </ResourceConfiguration>
+  </data>
+</SaveCFG>
