@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <SaveCFG xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <data>
+  <ResourceConfigurations>
     <ResourceConfiguration>
       <Name>HP</Name>
-      <initialValue>100</initialValue>
-      <maxValue>100</maxValue>
+      <initialValue>6109</initialValue>
+      <maxValue>6550</maxValue>
       <autoRefill>0</autoRefill>
       <maxAutoRefill>0</maxAutoRefill>
       <refillMode>Linear</refillMode>
@@ -39,8 +39,8 @@
     </ResourceConfiguration>
     <ResourceConfiguration>
       <Name>ManaMelee</Name>
-      <initialValue>300</initialValue>
-      <maxValue>300</maxValue>
+      <initialValue>6968</initialValue>
+      <maxValue>7356</maxValue>
       <autoRefill>5</autoRefill>
       <maxAutoRefill>100</maxAutoRefill>
       <refillMode>Bursts</refillMode>
@@ -61,5 +61,123 @@
         <int>40</int>
       </ComsumingPhases>
     </ResourceConfiguration>
-  </data>
+  </ResourceConfigurations>
+  <RawPickupInfos>
+    <RawPickupInfo>
+      <ID>HP</ID>
+      <type>HP</type>
+      <modelPath>Assets/TDMP/Prefabs/EnemyDropModel_Health.prefab</modelPath>
+      <minRestoreValue>2</minRestoreValue>
+      <maxRestoreValue>2</maxRestoreValue>
+    </RawPickupInfo>
+    <RawPickupInfo>
+      <ID>Shield</ID>
+      <type>Shield</type>
+      <modelPath>Assets/TDMP/Prefabs/EnemyDropModel_Shield.prefab</modelPath>
+      <minRestoreValue>2</minRestoreValue>
+      <maxRestoreValue>2</maxRestoreValue>
+    </RawPickupInfo>
+    <RawPickupInfo>
+      <ID>AR Ammo</ID>
+      <type>AmmoAR</type>
+      <modelPath>Assets/TDMP/Prefabs/EnemyDropModel_AmmoAR.prefab</modelPath>
+      <minRestoreValue>5</minRestoreValue>
+      <maxRestoreValue>5</maxRestoreValue>
+    </RawPickupInfo>
+    <RawPickupInfo>
+      <ID>Shotgun Ammo</ID>
+      <type>AmmoShotgun</type>
+      <modelPath>Assets/TDMP/Prefabs/EnemyDropModel_AmmoShotgun.prefab</modelPath>
+      <minRestoreValue>5</minRestoreValue>
+      <maxRestoreValue>5</maxRestoreValue>
+    </RawPickupInfo>
+    <RawPickupInfo>
+      <ID>Melee Mana</ID>
+      <type>ManaMelee</type>
+      <modelPath>Assets/TDMP/Prefabs/EnemyDropModel_Melee.prefab</modelPath>
+      <minRestoreValue>3</minRestoreValue>
+      <maxRestoreValue>3</maxRestoreValue>
+    </RawPickupInfo>
+    <RawPickupInfo>
+      <ID>Dash Mana</ID>
+      <type>ManaDash</type>
+      <modelPath>Assets/TDMP/Prefabs/EnemyDropModel_Dash.prefab</modelPath>
+      <minRestoreValue>1</minRestoreValue>
+      <maxRestoreValue>1</maxRestoreValue>
+    </RawPickupInfo>
+  </RawPickupInfos>
+  <CODDrops>
+    <CODDrop>
+      <type>
+        <name>Melee</name>
+        <hideFlags>None</hideFlags>
+      </type>
+      <Drops>
+        <Drop>
+          <Pickup_ID>Dash Mana</Pickup_ID>
+          <minValue>5</minValue>
+          <maxValue>5</maxValue>
+        </Drop>
+      </Drops>
+    </CODDrop>
+    <CODDrop>
+      <type>
+        <name>AR</name>
+        <hideFlags>None</hideFlags>
+      </type>
+      <Drops>
+        <Drop>
+          <Pickup_ID>Shotgun Ammo</Pickup_ID>
+          <minValue>2</minValue>
+          <maxValue>6</maxValue>
+        </Drop>
+      </Drops>
+    </CODDrop>
+    <CODDrop>
+      <type>
+        <name>Shotgun</name>
+        <hideFlags>None</hideFlags>
+      </type>
+      <Drops>
+        <Drop>
+          <Pickup_ID>AR Ammo</Pickup_ID>
+          <minValue>2</minValue>
+          <maxValue>6</maxValue>
+        </Drop>
+      </Drops>
+    </CODDrop>
+    <CODDrop>
+      <type>
+        <name>Dash</name>
+        <hideFlags>None</hideFlags>
+      </type>
+      <Drops>
+        <Drop>
+          <Pickup_ID>HP</Pickup_ID>
+          <minValue>2</minValue>
+          <maxValue>4</maxValue>
+        </Drop>
+        <Drop>
+          <Pickup_ID>Shield</Pickup_ID>
+          <minValue>1</minValue>
+          <maxValue>2</maxValue>
+        </Drop>
+        <Drop>
+          <Pickup_ID>Melee Mana</Pickup_ID>
+          <minValue>2</minValue>
+          <maxValue>2</maxValue>
+        </Drop>
+      </Drops>
+    </CODDrop>
+  </CODDrops>
+  <EnemyDropMultipliers>
+    <EnemyDropMultiplier>
+      <Name>Giant</Name>
+      <Multiplier>3.5</Multiplier>
+    </EnemyDropMultiplier>
+    <EnemyDropMultiplier>
+      <Name>Bad Dog</Name>
+      <Multiplier>0.5</Multiplier>
+    </EnemyDropMultiplier>
+  </EnemyDropMultipliers>
 </SaveCFG>
